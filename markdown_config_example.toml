@@ -1,0 +1,54 @@
+# Example configuration for markdown file output
+# This shows how to configure the AI Marketplace Monitor to write
+# markdown files for each listing instead of (or in addition to) sending notifications
+
+# Step 1: Define the markdown notification method
+# This registers 'markdown' as a valid notification type
+[notification.markdown]
+enabled = true
+
+# Step 2: Configure markdown settings in your user profile
+[user.me]
+# Required: Directory where markdown files will be written
+markdown_output_dir = 'D:/marketplace-listings'
+
+# Optional: Customize the filename format
+# Available placeholders: {marketplace}, {id}, {timestamp}, {title}, {name}
+# Default: '{marketplace}_{id}'
+markdown_filename_format = '{marketplace}_{id}'
+
+# Optional: Include YAML frontmatter in markdown files
+# Frontmatter is useful for tools like Obsidian, Logseq, or static site generators
+# Default: false
+markdown_include_frontmatter = true
+
+# Optional: Overwrite existing files
+# If false, existing files will be skipped
+# Default: false
+markdown_overwrite_existing = false
+
+# Enable markdown output
+# You can combine with other notification methods like 'gmail', 'telegram', etc.
+# Examples:
+#   notify_with = ['markdown']                    # Only markdown files
+#   notify_with = ['markdown', 'gmail']           # Markdown files AND email
+#   notify_with = ['markdown', 'telegram']        # Markdown files AND telegram
+notify_with = ['markdown']
+
+# User must be enabled
+enabled = true
+
+# Optional: Re-notification interval
+# Set to false or omit to only notify once per listing
+# remind = '1 day'
+
+[marketplace.facebook]
+name = 'facebook'
+enabled = true
+
+[item.test_item]
+marketplace = 'facebook'
+search_phrases = ['vintage camera']
+search_region = 'usa'
+notify = ['me']  # References [user.me]
+enabled = true

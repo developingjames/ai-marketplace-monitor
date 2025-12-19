@@ -9,6 +9,7 @@ from diskcache import Cache  # type: ignore
 from .ai import AIResponse  # type: ignore
 from .email_notify import EmailNotificationConfig
 from .listing import Listing
+from .markdown_notify import MarkdownNotificationConfig
 from .marketplace import TItemConfig
 from .notification import NotificationConfig, NotificationStatus
 from .ntfy import NtfyNotificationConfig
@@ -25,6 +26,7 @@ class UserConfig(
     PushoverNotificationConfig,
     NtfyNotificationConfig,
     TelegramNotificationConfig,
+    MarkdownNotificationConfig,
 ):
     """UserConfiguration
 

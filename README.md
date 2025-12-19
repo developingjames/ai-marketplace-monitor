@@ -62,6 +62,7 @@ AI: Great deal; A well-priced, well-maintained camera meets all search criteria,
 
 - PushBullet, PushOver, Telegram, or Ntfy notifications
 - HTML email notifications with images
+- Markdown file output for each listing
 - Customizable notification levels
 - Repeated notification options
 
@@ -85,7 +86,9 @@ playwright install
 
 ### Basic Configuration
 
-Create `~/.ai-marketplace-monitor/config.toml`:
+Create a configuration file at:
+- **Linux/Mac**: `~/.ai-marketplace-monitor/config.toml`
+- **Windows**: `C:\Users\<username>\.ai-marketplace-monitor\config.toml`
 
 ```toml
 [marketplace.facebook]
@@ -99,6 +102,8 @@ max_price = 300
 [user.me]
 pushbullet_token = 'your_token_here'  # Get from pushbullet.com
 ```
+
+> **Note**: The config file, cache database, and logs are all stored in the `.ai-marketplace-monitor` directory in your home folder.
 
 ### Run the Monitor
 
@@ -142,6 +147,17 @@ Exclude listings with water damage or missing parts.'''
 rating = 4  # Only notify for 4+ star AI ratings
 ```
 
+**Save listings as markdown files:**
+
+```toml
+[user.me]
+markdown_output_dir = 'D:/marketplace-listings'
+markdown_include_frontmatter = true  # Add YAML frontmatter for Obsidian/Logseq
+notify_with = ['markdown']  # Or combine: ['markdown', 'email', 'telegram']
+```
+
+Each listing is saved as a separate markdown file with title, price, description, seller info, images, and AI evaluation. Perfect for building a searchable database in tools like Obsidian or for offline browsing.
+
 ## 📚 Documentation
 
 For detailed information on setup and advanced features, see the comprehensive documentation:
@@ -158,6 +174,7 @@ For detailed information on setup and advanced features, see the comprehensive d
 **Notification Setup:**
 
 - Email (SMTP), PushBullet, PushOver, Telegram, Ntfy
+- Markdown file output with optional YAML frontmatter
 - Multi-user configurations
 - HTML email templates
 
