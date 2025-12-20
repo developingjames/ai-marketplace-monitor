@@ -15,7 +15,7 @@
 
 </div>
 
-An intelligent tool that monitors Facebook Marketplace listings using AI to help you find the best deals. Get instant notifications when items matching your criteria are posted, with AI-powered analysis of each listing.
+An intelligent tool that monitors Facebook Marketplace and Craigslist listings using AI to help you find the best deals. Get instant notifications when items matching your criteria are posted, with AI-powered analysis of each listing.
 
 **📚 [Read the Full Documentation](https://ai-marketplace-monitor.readthedocs.io/)**
 
@@ -46,10 +46,11 @@ AI: Great deal; A well-priced, well-maintained camera meets all search criteria,
 
 🔍 **Smart Search**
 
+- Search multiple marketplaces (Facebook Marketplace, Craigslist)
 - Search multiple products using keywords
 - Filter by price and location
 - Exclude irrelevant results and spammers
-- Support for different Facebook Marketplace layouts
+- Support for marketplace-specific categories and filters
 
 🤖 **AI-Powered**
 

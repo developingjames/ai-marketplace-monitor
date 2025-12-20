@@ -12,6 +12,7 @@ else:
     import tomli as tomllib
 
 from .ai import DeepSeekBackend, OllamaBackend, OpenAIBackend, TAIConfig
+from .craigslist import CraigslistMarketplace
 from .facebook import FacebookMarketplace
 from .marketplace import TItemConfig, TMarketplaceConfig
 from .notification import NotificationConfig
@@ -19,7 +20,10 @@ from .region import RegionConfig
 from .user import User, UserConfig
 from .utils import MonitorConfig, Translator, hilight, merge_dicts
 
-supported_marketplaces = {"facebook": FacebookMarketplace}
+supported_marketplaces = {
+    "facebook": FacebookMarketplace,
+    "craigslist": CraigslistMarketplace,
+}
 supported_ai_backends = {
     "deepseek": DeepSeekBackend,
     "openai": OpenAIBackend,

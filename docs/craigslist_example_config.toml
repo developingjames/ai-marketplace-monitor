@@ -1,0 +1,109 @@
+#
+# Example Craigslist Configuration
+#
+
+# AI Configuration (optional - for rating listings)
+[ai.openai]
+api_key = 'your-api-key-here'
+model = "gpt-4o-mini"
+
+#
+# Craigslist Marketplace Configuration
+#
+[marketplace.craigslist]
+market_type = 'craigslist'
+search_city = 'houston'  # Craigslist subdomain (e.g., houston.craigslist.org)
+search_interval = '15m'  # How often to search
+max_search_interval = '1h'  # Maximum interval between searches
+
+# Optional Craigslist-specific filters (can be overridden per item)
+# posted_today = true  # Only show listings posted today
+# has_image = true  # Only show listings with images
+# search_nearby = true  # Include nearby areas in search
+# search_distance = 25  # Search radius in miles
+# seller_locations = ['Houston', 'Katy']  # Filter by seller location
+# exclude_sellers = []  # List of sellers to exclude
+
+#
+# Facebook Marketplace Configuration (optional - can use both!)
+#
+[marketplace.facebook]
+market_type = 'facebook'
+search_city = 'houston'
+username = 'your-email@example.com'
+password = 'your-password'
+login_wait_time = 60
+search_interval = '30m'
+
+#
+# Users and Notifications
+#
+[user.me]
+pushbullet_token = 'your-pushbullet-token'
+email = 'your-email@example.com'
+notify_with = ['pushbullet']
+
+#
+# Craigslist Item Examples
+#
+
+# Basic Craigslist search
+[item.bike]
+marketplace = 'craigslist'
+search_phrases = 'road bike'
+min_price = 200
+max_price = 800
+keywords = ['carbon', 'shimano']
+antikeywords = ['damaged', 'broken', 'parts only']
+has_image = true
+posted_today = true
+
+# Craigslist cars search with category
+[item.car]
+marketplace = 'craigslist'
+search_phrases = ['honda civic', 'toyota corolla']
+category = 'cta'  # Cars & Trucks category
+min_price = 5000
+max_price = 15000
+condition = ['excellent', 'good']
+has_image = true
+seller_locations = ['Houston', 'Katy', 'Sugar Land']
+
+# Craigslist electronics with AI evaluation
+[item.laptop]
+marketplace = 'craigslist'
+search_phrases = ['macbook pro', 'thinkpad']
+category = 'sya'  # Computers category
+min_price = 300
+max_price = 1000
+keywords = ['i7', 'ssd']
+ai = 'openai'
+rating = [4, 5]  # Only notify on high ratings
+has_image = true
+
+# Multi-marketplace search (searches both Craigslist and Facebook)
+[item.gopro]
+search_phrases = 'GoPro Hero 11'
+min_price = 100
+max_price = 300
+keywords = ['GoPro', 'Hero']
+# No marketplace specified = searches all configured marketplaces
+
+# Craigslist furniture search
+[item.furniture]
+marketplace = 'craigslist'
+search_phrases = ['dining table', 'desk']
+category = 'fua'  # Furniture category
+max_price = 500
+search_distance = 15
+has_image = true
+antikeywords = ['ikea', 'particle board']
+
+# Craigslist free stuff
+[item.freestuff]
+marketplace = 'craigslist'
+search_phrases = ['free', 'curb alert']
+category = 'zip'  # Free category
+has_image = true
+posted_today = true
+search_interval = '5m'  # Check more frequently for free items

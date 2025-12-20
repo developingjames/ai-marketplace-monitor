@@ -20,6 +20,7 @@ from .utils import (
 
 class MarketPlace(Enum):
     FACEBOOK = "facebook"
+    CRAIGSLIST = "craigslist"
 
 
 @dataclass
@@ -367,19 +368,22 @@ class MarketItemCommonConfig(BaseConfig):
 class MarketplaceConfig(MarketItemCommonConfig):
     """Generic marketplace config"""
 
-    # name of market, right now facebook is the only supported one
+    # name of market, supported: facebook, craigslist
     market_type: str | None = MarketPlace.FACEBOOK.value
     language: str | None = None
     monitor_config: MonitorConfig | None = None
 
     def handle_market_type(self: "MarketplaceConfig") -> None:
+        from .config import supported_marketplaces
+
         if self.market_type is None:
             return
         if not isinstance(self.market_type, str):
             raise ValueError(f"Marketplace {hilight(self.market_type)} market must be a string.")
-        if self.market_type.lower() != MarketPlace.FACEBOOK.value:
+        if self.market_type.lower() not in supported_marketplaces:
             raise ValueError(
-                f"Marketplace {hilight(self.market_type)} market must be {MarketPlace.FACEBOOK.value}."
+                f"Marketplace {hilight(self.market_type)} is not supported. "
+                f"Supported: {', '.join(supported_marketplaces.keys())}"
             )
 
     def handle_language(self: "MarketplaceConfig") -> None:
