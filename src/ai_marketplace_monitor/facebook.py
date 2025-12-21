@@ -493,12 +493,13 @@ class FacebookMarketplace(Marketplace):
                 # go to each item and get the description
                 # if we have not done that before
                 for listing in found_listings:
-                    if listing.post_url.split("?")[0] in found:
+                    normalized = listing.post_url.split("?")[0]
+                    if normalized in found:
                         continue
                     if self.keyboard_monitor is not None and self.keyboard_monitor.is_paused():
                         return
                     counter.increment(CounterItem.LISTING_EXAMINED, item_config.name)
-                    found[listing.post_url.split("?")[0]] = True
+                    found[normalized] = True
                     # filter by title and location; skip keyword filtering since we do not have description yet.
                     if not self.check_listing(listing, item_config, description_available=False):
                         counter.increment(CounterItem.EXCLUDED_LISTING, item_config.name)
@@ -556,11 +557,25 @@ class FacebookMarketplace(Marketplace):
     ) -> Tuple[Listing, bool]:
         assert post_url.startswith("https://www.facebook.com")
         details = Listing.from_cache(post_url)
-        if (
-            details is not None
-            and (price is None or details.price == price)
-            and (title is None or details.title == title)
-        ):
+
+        # Check if we should ignore price changes for cache validation
+        ignore_price = getattr(item_config, "cache_ignore_price_changes", False) or False
+
+        # Price validation: ignore if price is **unspecified** in cache or if user disabled price checking
+        price_matches = (
+            price is None
+            or ignore_price
+            or details is None
+            or details.price == price
+            or details.price == "**unspecified**"  # Ignore unspecified cached prices
+        )
+
+        if details is not None and price_matches and (title is None or details.title == title):
+            # If cached price was unspecified but search has actual price, update it
+            if details.price == "**unspecified**" and price is not None:
+                details.price = price
+                details.to_cache(post_url)
+
             # if the price and title are the same, we assume everything else is unchanged.
             return details, True
 
@@ -577,6 +592,11 @@ class FacebookMarketplace(Marketplace):
                 "The listing might be missing key information (e.g. seller) or not in English."
                 "Please add option language to your marketplace configuration is the latter is the case. See https://github.com/BoPeng/ai-marketplace-monitor?tab=readme-ov-file#support-for-non-english-languages for details."
             )
+
+        # If detail page couldn't get price but search result had it, use search price
+        if details.price == "**unspecified**" and price is not None:
+            details.price = price
+
         details.to_cache(post_url)
         return details, False
 
@@ -756,6 +776,30 @@ class FacebookSearchResultPage(WebPage):
 
                 if image.startswith("/"):
                     image = f"https://www.facebook.com{image}"
+
+                # Validate that we extracted essential data
+                # Title is always required - if missing, HTML structure likely changed
+                if not title:
+                    if self.logger:
+                        self.logger.error(
+                            f"{hilight('[Parse Error]', 'fail')} Failed to extract title for listing {idx + 1}. "
+                            f"Facebook HTML structure may have changed. URL: {post_url}"
+                        )
+                    raise RuntimeError(
+                        f"Failed to extract title from Facebook search results for listing {idx + 1}. "
+                        f"The HTML structure may have changed and the scraper needs to be updated."
+                    )
+
+                # Price is optional (free listings, contact for price, etc.)
+                # But log a warning if we can't extract it for debugging
+                if not price:
+                    if self.logger:
+                        self.logger.debug(
+                            f"{hilight('[Parse]', 'warn')} No price found for listing {idx + 1}: {title}. "
+                            f"This may be a free listing or contact-for-price."
+                        )
+                    # Set to $0 for free/no-price listings
+                    price = "$0"
 
                 listings.append(
                     Listing(

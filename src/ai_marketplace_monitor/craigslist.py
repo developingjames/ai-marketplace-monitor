@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from logging import Logger
-from typing import Any, Generator, List, Type
+from typing import Any, Generator, List, Tuple, Type
 from urllib.parse import quote
 
 from playwright.sync_api import Browser, Page
@@ -316,13 +316,45 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                 if not listing_id:
                     continue
 
-                # Extract title
-                title_element = element.query_selector(".title")
-                title = title_element.text_content().strip() if title_element else ""
+                # Try to find title with multiple possible selectors
+                title = ""
+                title_selectors = [
+                    ".posting-title .label",  # New Craigslist layout
+                    ".posting-title span.label",  # Alternative
+                    ".title",  # Old selector
+                    ".title-blob",  # Possible selector
+                    "a.main",  # Link might have title attribute
+                    ".meta .title",
+                ]
+                for selector in title_selectors:
+                    title_element = element.query_selector(selector)
+                    if title_element:
+                        # Try getting from text content first
+                        title = title_element.text_content().strip()
+                        # If empty, try title attribute
+                        if not title:
+                            title = title_element.get_attribute("title") or ""
+                        if title:
+                            break
 
-                # Extract price
-                price_element = element.query_selector(".price")
-                price = price_element.text_content().strip() if price_element else "$0"
+                if not title:
+                    link = element.query_selector("a")
+                    if link:
+                        title = link.get_attribute("aria-label") or ""
+
+                # Try to find price with multiple possible selectors
+                price = "$0"
+                price_selectors = [
+                    ".price",  # Old selector
+                    ".priceinfo",  # Possible new selector
+                    ".meta .price",
+                ]
+                for selector in price_selectors:
+                    price_element = element.query_selector(selector)
+                    if price_element:
+                        price = price_element.text_content().strip()
+                        if price and price != "$0":
+                            break
 
                 # Extract location
                 location_element = element.query_selector(".location")
@@ -339,6 +371,30 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                 image_url = ""
                 if img_element:
                     image_url = img_element.get_attribute("src") or ""
+
+                # Validate that we extracted essential data
+                # Title is always required - if missing, HTML structure likely changed
+                if not title:
+                    if self.logger:
+                        self.logger.error(
+                            f"{hilight('[Parse Error]', 'fail')} Failed to extract title for listing {listing_id}. "
+                            f"Craigslist HTML structure may have changed. URL: {post_url}"
+                        )
+                    raise RuntimeError(
+                        f"Failed to extract title from Craigslist search results for listing {listing_id}. "
+                        f"The HTML structure may have changed and the scraper needs to be updated."
+                    )
+
+                # Price is optional (free listings, contact for price, etc.)
+                # But log a warning if we can't extract it for debugging
+                if not price or price == "$0":
+                    if self.logger:
+                        self.logger.debug(
+                            f"{hilight('[Parse]', 'warn')} No price found for listing {listing_id}: {title}. "
+                            f"This may be a free listing or contact-for-price."
+                        )
+                    # Set to $0 for free/no-price listings
+                    price = "$0"
 
                 listing = Listing(
                     marketplace="craigslist",
@@ -364,9 +420,39 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
         return listings
 
     def get_listing_details(
-        self: "CraigslistMarketplace", post_url: str, item_name: str
-    ) -> Listing | None:
+        self: "CraigslistMarketplace",
+        post_url: str,
+        item_config: CraigslistItemConfig,
+        price: str | None = None,
+        title: str | None = None,
+    ) -> Tuple[Listing, bool]:
         """Fetch detailed information for a Craigslist listing"""
+        from .listing import Listing
+
+        details = Listing.from_cache(post_url)
+
+        # Check if we should ignore price changes for cache validation
+        ignore_price = getattr(item_config, "cache_ignore_price_changes", False) or False
+
+        # Normalize empty strings to None for comparison
+        normalized_price = price if price and price != "$0" else None
+        normalized_title = title if title else None
+
+        # Price validation: ignore if user disabled price checking
+        price_matches = (
+            normalized_price is None
+            or ignore_price
+            or details is None
+            or details.price == normalized_price
+        )
+
+        # Title validation: treat empty strings as None
+        title_matches = normalized_title is None or details.title == normalized_title
+
+        if details is not None and price_matches and title_matches:
+            # if the price and title are the same, we assume everything else is unchanged.
+            return details, True
+
         try:
             page = self.create_page()
             self.goto_url(post_url)
@@ -417,9 +503,30 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
             # Extract seller info (Craigslist doesn't show seller names publicly)
             seller = "Craigslist User"
 
+            # Validate that we extracted essential data from detail page
+            if not title:
+                raise RuntimeError(
+                    f"Failed to extract title from Craigslist detail page: {post_url}. "
+                    f"The HTML structure may have changed and the scraper needs to be updated."
+                )
+
+            if not price or price == "$0":
+                if self.logger:
+                    self.logger.warning(
+                        f"{hilight('[Parse Warning]', 'warn')} Failed to extract price from detail page: {post_url}. "
+                        f"Using price from search results if available."
+                    )
+
+            if not description:
+                if self.logger:
+                    self.logger.warning(
+                        f"{hilight('[Parse Warning]', 'warn')} Failed to extract description from detail page: {post_url}. "
+                        f"Description will be empty."
+                    )
+
             listing = Listing(
                 marketplace="craigslist",
-                name=item_name,
+                name=item_config.name,
                 id=listing_id,
                 title=title,
                 image=image_url,
@@ -431,14 +538,24 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                 description=description,
             )
 
-            return listing
+            # Save to cache
+            listing.to_cache(post_url)
+
+            return listing, False
 
         except Exception as e:
             if self.logger:
                 self.logger.warning(
                     f"{hilight('[Retrieve]', 'warn')} Failed to fetch listing details: {e}"
                 )
-            return None
+            # If we have stale cache, return it with warning
+            if details is not None:
+                if self.logger:
+                    self.logger.warning(
+                        f"{hilight('[Cache]', 'warn')} Returning stale cache for {post_url}"
+                    )
+                return details, True
+            raise  # No cache available, propagate error
 
     def check_listing(
         self: "CraigslistMarketplace",
@@ -556,18 +673,28 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                         if not self.check_listing(listing, item, description_available=False):
                             continue
 
-                        # Fetch detailed listing information
-                        detailed_listing = self.get_listing_details(listing.post_url, item.name)
-                        if detailed_listing:
+                        # Fetch detailed listing information with cache support
+                        try:
+                            detailed_listing, from_cache = self.get_listing_details(
+                                listing.post_url,
+                                item,
+                                price=listing.price,
+                                title=listing.title,
+                            )
                             # Check filters again with description
                             if self.check_listing(detailed_listing, item):
                                 yield detailed_listing
-                        else:
+
+                            # Only delay if we fetched from web (not cache)
+                            if not from_cache:
+                                time.sleep(1)
+                        except Exception as e:
+                            if self.logger:
+                                self.logger.error(
+                                    f"{hilight('[Error]', 'fail')} Failed to get details for {listing.post_url}: {e}"
+                                )
                             # If we couldn't get details, yield the basic listing
                             yield listing
-
-                        # Small delay between detail fetches
-                        time.sleep(1)
 
                 except Exception as e:
                     if self.logger:

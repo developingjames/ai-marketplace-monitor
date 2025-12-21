@@ -408,6 +408,7 @@ class ItemConfig(MarketItemCommonConfig):
     antikeywords: List[str] | None = None
     description: str | None = None
     marketplace: str | None = None
+    cache_ignore_price_changes: bool | None = None
 
     def handle_search_phrases(self: "ItemConfig") -> None:
         if isinstance(self.search_phrases, str):

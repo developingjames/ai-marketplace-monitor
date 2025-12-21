@@ -43,14 +43,14 @@ class Listing:
         post_url: str,
         local_cache: Cache | None = None,
     ) -> Optional["Listing"]:
+        normalized_url = post_url.split("?")[0]
+        key = (CacheType.LISTING_DETAILS.value, normalized_url)
+
         try:
             # details could be a different datatype, miss some key etc.
             # and we have recently changed to save Listing as a dictionary
-            return cls(
-                **(cache if local_cache is None else local_cache).get(
-                    (CacheType.LISTING_DETAILS.value, post_url.split("?")[0])
-                )
-            )
+            result = (cache if local_cache is None else local_cache).get(key)
+            return cls(**result) if result else None
         except KeyboardInterrupt:
             raise
         except Exception:
@@ -61,8 +61,11 @@ class Listing:
         post_url: str,
         local_cache: Cache | None = None,
     ) -> None:
+        normalized_url = post_url.split("?")[0]
+        key = (CacheType.LISTING_DETAILS.value, normalized_url)
+
         (cache if local_cache is None else local_cache).set(
-            (CacheType.LISTING_DETAILS.value, post_url.split("?")[0]),
+            key,
             asdict(self),
             tag=CacheType.LISTING_DETAILS.value,
         )
