@@ -253,6 +253,7 @@ class FacebookMarketplace(Marketplace):
     initial_url = "https://www.facebook.com/login/device-based/regular/login/"
 
     name = "facebook"
+    ItemConfigClass = FacebookItemConfig
 
     def __init__(
         self: "FacebookMarketplace",

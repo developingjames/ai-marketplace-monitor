@@ -108,11 +108,23 @@ pushbullet_token = 'your_token_here'  # Get from pushbullet.com
 
 ### Run the Monitor
 
+**Production (from PyPI):**
 ```bash
 ai-marketplace-monitor
 ```
 
-The program will open a browser, search Facebook Marketplace, and notify you of matching items.
+**Development (from source):**
+```bash
+# Install in editable/development mode (recommended - changes take effect immediately)
+cd /path/to/ai-marketplace-monitor
+pip install -e .
+ai-marketplace-monitor
+
+# Alternative: Using Python directly without install
+python -m ai_marketplace_monitor.cli
+```
+
+The program will open a browser, search marketplaces, and notify you of matching items.
 
 ## 💡 Example Usage
 

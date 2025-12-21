@@ -11,7 +11,7 @@ model = "gpt-4o-mini"
 # Craigslist Marketplace Configuration
 #
 [marketplace.craigslist]
-market_type = 'craigslist'
+# market_type defaults to 'craigslist' and can be omitted
 search_city = 'houston'  # Craigslist subdomain (e.g., houston.craigslist.org)
 search_interval = '15m'  # How often to search
 max_search_interval = '1h'  # Maximum interval between searches
@@ -28,7 +28,7 @@ max_search_interval = '1h'  # Maximum interval between searches
 # Facebook Marketplace Configuration (optional - can use both!)
 #
 [marketplace.facebook]
-market_type = 'facebook'
+# market_type defaults to 'facebook' and can be omitted
 search_city = 'houston'
 username = 'your-email@example.com'
 password = 'your-password'

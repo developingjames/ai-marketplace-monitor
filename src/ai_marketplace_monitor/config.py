@@ -187,10 +187,11 @@ class Config(Generic[TAIConfig, TItemConfig, TMarketplaceConfig]):
                     "marketplace" not in item_config
                     or item_config["marketplace"] == marketplace_name
                 ):
-                    # use the first available marketplace
+                    # use the first available marketplace to create config,
+                    # but keep marketplace=None if not specified so it searches all marketplaces
                     self.item[item_name] = marketplace_class.get_item_config(
                         name=item_name,
-                        marketplace=marketplace_name,
+                        marketplace=item_config.get("marketplace"),  # Keep None if not specified
                         **{x: y for x, y in item_config.items() if x != "marketplace"},
                     )
                     break

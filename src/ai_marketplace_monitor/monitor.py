@@ -280,6 +280,14 @@ class MarketplaceMonitor:
                 return translator
         raise RuntimeError(f"Cannot find translator for language {language}.")
 
+    def get_valid_fields_for_marketplace(self, marketplace_class: type) -> set:
+        """Get all valid field names for a marketplace's ItemConfig class."""
+        if not hasattr(marketplace_class, "ItemConfigClass"):
+            raise AttributeError(
+                f"Marketplace class {marketplace_class.__name__} must define ItemConfigClass attribute"
+            )
+        return set(marketplace_class.ItemConfigClass.__dataclass_fields__.keys())
+
     def schedule_jobs(self: "MarketplaceMonitor") -> None:
         """Schedule jobs to run periodically."""
         # we reload the config file each time when a scan action is completed
@@ -291,7 +299,7 @@ class MarketplaceMonitor:
         for marketplace_config in self.config.marketplace.values():
             if marketplace_config.enabled is False:
                 continue
-            marketplace_class = supported_marketplaces[marketplace_config.name]
+            marketplace_class = supported_marketplaces[marketplace_config.market_type]
             if marketplace_config.name in self.active_marketplaces:
                 marketplace = self.active_marketplaces[marketplace_config.name]
             else:
@@ -314,25 +322,37 @@ class MarketplaceMonitor:
                     item_config.marketplace is None
                     or item_config.marketplace == marketplace_config.name
                 ):
+                    # Create marketplace-specific item config
+                    # Filter fields to only include those valid for this marketplace
+                    valid_fields = self.get_valid_fields_for_marketplace(marketplace_class)
+                    filtered_dict = {
+                        k: v for k, v in item_config.__dict__.items() if k in valid_fields
+                    }
+                    marketplace_specific_item_config = marketplace_class.get_item_config(
+                        **filtered_dict
+                    )
+
                     # wait for some time before next search
                     # interval (in minutes) can be defined both for the marketplace
                     # if there is any configuration file change, stop sleeping and search again
                     scheduled = None
-                    start_at_list = item_config.start_at or marketplace_config.start_at
+                    start_at_list = (
+                        marketplace_specific_item_config.start_at or marketplace_config.start_at
+                    )
                     if start_at_list is not None and start_at_list:
                         for start_at in start_at_list:
                             if start_at.startswith("*:*:"):
                                 # '*:*:12' to ':12'
                                 if self.logger:
                                     self.logger.info(
-                                        f"""{hilight("[Schedule]", "info")} Scheduling to search for {item_config.name} every minute at {start_at[3:]}s"""
+                                        f"""{hilight("[Schedule]", "info")} Scheduling to search for {marketplace_specific_item_config.name} every minute at {start_at[3:]}s"""
                                     )
                                 scheduled = schedule.every().minute.at(start_at[3:])
                             elif start_at.startswith("*:"):
                                 # '*:12:12' or  '*:12'
                                 if self.logger:
                                     self.logger.info(
-                                        f"""{hilight("[Schedule]", "info")} Scheduling to search for {item_config.name} every hour at {start_at[1:]}m"""
+                                        f"""{hilight("[Schedule]", "info")} Scheduling to search for {marketplace_specific_item_config.name} every hour at {start_at[1:]}m"""
                                     )
                                 scheduled = schedule.every().hour.at(
                                     start_at[1:] if start_at.count(":") == 1 else start_at[2:]
@@ -341,37 +361,37 @@ class MarketplaceMonitor:
                                 # '12:12:12' or '12:12'
                                 if self.logger:
                                     self.logger.info(
-                                        f"""{hilight("[Schedule]", "ss")} Scheduling to search for {item_config.name} every day at {start_at}"""
+                                        f"""{hilight("[Schedule]", "ss")} Scheduling to search for {marketplace_specific_item_config.name} every day at {start_at}"""
                                     )
                                 scheduled = schedule.every().day.at(start_at)
                     else:
                         search_interval = max(
-                            item_config.search_interval
+                            marketplace_specific_item_config.search_interval
                             or marketplace_config.search_interval
                             or 30 * 60,
                             1,
                         )
                         max_search_interval = max(
-                            item_config.max_search_interval
+                            marketplace_specific_item_config.max_search_interval
                             or marketplace_config.max_search_interval
                             or 60 * 60,
                             search_interval,
                         )
                         if self.logger:
                             self.logger.info(
-                                f"""{hilight("[Schedule]", "info")} Scheduling to search for {item_config.name} every {humanize.naturaldelta(search_interval)} {"" if search_interval == max_search_interval else f"to {humanize.naturaldelta(max_search_interval)}"}"""
+                                f"""{hilight("[Schedule]", "info")} Scheduling to search for {marketplace_specific_item_config.name} every {humanize.naturaldelta(search_interval)} {"" if search_interval == max_search_interval else f"to {humanize.naturaldelta(max_search_interval)}"}"""
                             )
                         scheduled = schedule.every(search_interval).to(max_search_interval).seconds
                     if scheduled is None:
                         raise ValueError(
-                            f"Cannot determine a schedule for {item_config.name} from configuration file."
+                            f"Cannot determine a schedule for {marketplace_specific_item_config.name} from configuration file."
                         )
                     scheduled.do(
                         self.search_item,
                         marketplace_config,
                         marketplace,
-                        item_config,
-                    ).tag(item_config.name)
+                        marketplace_specific_item_config,
+                    ).tag(marketplace_specific_item_config.name)
 
     def handle_pause(self: "MarketplaceMonitor") -> None:
         """Handle interruption signal."""
@@ -600,7 +620,7 @@ class MarketplaceMonitor:
 
                 # get_listing_details returns a tuple (Listing, bool) - unpack it properly
                 if isinstance(listing_result, tuple) and len(listing_result) == 2:
-                    listing, from_cache = listing_result
+                    listing, _from_cache = listing_result
                 else:
                     # Fallback - treat as direct listing (shouldn't happen but defensive)
                     listing = listing_result

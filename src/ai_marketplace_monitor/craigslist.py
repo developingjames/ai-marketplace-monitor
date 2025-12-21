@@ -9,7 +9,7 @@ from urllib.parse import quote
 from playwright.sync_api import Browser, Page
 
 from .listing import Listing
-from .marketplace import ItemConfig, Marketplace, MarketplaceConfig
+from .marketplace import ItemConfig, MarketPlace, Marketplace, MarketplaceConfig
 from .utils import BaseConfig, KeyboardMonitor, hilight, is_substring
 
 
@@ -170,7 +170,16 @@ class CraigslistMarketItemCommonConfig(BaseConfig):
 class CraigslistMarketplaceConfig(MarketplaceConfig, CraigslistMarketItemCommonConfig):
     """Craigslist marketplace configuration"""
 
-    pass
+    market_type: str | None = MarketPlace.CRAIGSLIST.value
+
+    def handle_market_type(self: "CraigslistMarketplaceConfig") -> None:
+        """Validate that market_type is craigslist"""
+        super().handle_market_type()
+        if self.market_type and self.market_type != MarketPlace.CRAIGSLIST.value:
+            raise ValueError(
+                f"CraigslistMarketplaceConfig market_type must be 'craigslist', "
+                f"got '{self.market_type}'"
+            )
 
 
 @dataclass
@@ -181,6 +190,8 @@ class CraigslistItemConfig(ItemConfig, CraigslistMarketItemCommonConfig):
 
 
 class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistItemConfig]):
+    ItemConfigClass = CraigslistItemConfig
+
     def __init__(
         self: "CraigslistMarketplace",
         name: str,
