@@ -85,6 +85,8 @@ class CraigslistMarketItemCommonConfig(BaseConfig):
     search_nearby: bool | None = None
     bundle_duplicates: bool | None = None
     search_distance: int | None = None
+    search_lat: float | None = None
+    search_lon: float | None = None
     category: str | None = None
     condition: List[str] | None = None
     crypto_ok: bool | None = None
@@ -130,6 +132,22 @@ class CraigslistMarketItemCommonConfig(BaseConfig):
         if not isinstance(self.search_distance, int) or self.search_distance < 0:
             raise ValueError(
                 f"Item {hilight(self.name)} search_distance must be a positive integer."
+            )
+
+    def handle_search_lat(self: "CraigslistMarketItemCommonConfig") -> None:
+        if self.search_lat is None:
+            return
+        if not isinstance(self.search_lat, (int, float)) or not (-90 <= self.search_lat <= 90):
+            raise ValueError(
+                f"Item {hilight(self.name)} search_lat must be a number between -90 and 90."
+            )
+
+    def handle_search_lon(self: "CraigslistMarketItemCommonConfig") -> None:
+        if self.search_lon is None:
+            return
+        if not isinstance(self.search_lon, (int, float)) or not (-180 <= self.search_lon <= 180):
+            raise ValueError(
+                f"Item {hilight(self.name)} search_lon must be a number between -180 and 180."
             )
 
     def handle_category(self: "CraigslistMarketItemCommonConfig") -> None:
@@ -239,10 +257,17 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
             price_value = max_price.split()[0] if " " in max_price else max_price
             params.append(f"max_price={price_value}")
 
-        # Distance filter
+        # Distance filter with lat/lon coordinates
         search_distance = item_config.search_distance or self.config.search_distance
+        search_lat = item_config.search_lat or self.config.search_lat
+        search_lon = item_config.search_lon or self.config.search_lon
+
         if search_distance:
             params.append(f"search_distance={search_distance}")
+            # Add lat/lon if provided to enable proper radius search
+            if search_lat is not None and search_lon is not None:
+                params.append(f"lat={search_lat}")
+                params.append(f"lon={search_lon}")
 
         # Posted today filter
         posted_today = item_config.posted_today or self.config.posted_today

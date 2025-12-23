@@ -1,5 +1,6 @@
 """Console script for ai-marketplace-monitor."""
 
+import io
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
@@ -8,6 +9,7 @@ from typing import Annotated, List, Optional
 
 import rich
 import typer
+from rich.console import Console
 from rich.logging import RichHandler
 
 from . import __version__
@@ -74,21 +76,38 @@ def main(
             help="Item to check for URLs specified --check. You will be prmopted for each URL if unspecified and there are multiple items to search.",
         ),
     ] = None,
+    once: Annotated[
+        Optional[bool],
+        typer.Option("--once", help="Run searches once without scheduling recurring searches."),
+    ] = False,
     version: Annotated[
         Optional[bool], typer.Option("--version", callback=version_callback, is_eager=True)
     ] = None,
 ) -> None:
     """Console script for AI Marketplace Monitor."""
+    # Reconfigure stdout/stderr to use UTF-8 encoding on Windows to handle emoji characters
+    if sys.platform == "win32":
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+
+    # Create a console without legacy Windows rendering to avoid emoji encoding issues
+    console = Console(legacy_windows=False, force_terminal=True)
+
     logging.basicConfig(
         level="DEBUG",
         # format="%(name)s %(message)s",
         format="%(message)s",
         handlers=[
             RichHandler(
+                console=console,
                 markup=True,
                 rich_tracebacks=True,
                 show_path=False if verbose is None else verbose,
                 level="DEBUG" if verbose else "INFO",
+                show_level=True,
+                show_time=True,
+                omit_repeated_times=False,
+                enable_link_path=False,
             ),
             RotatingFileHandler(
                 amm_home / "ai-marketplace-monitor.log",
@@ -144,7 +163,10 @@ def main(
 
     try:
         monitor = MarketplaceMonitor(config_files, headless, logger)
-        monitor.start_monitor()
+        if once:
+            monitor.run_once()
+        else:
+            monitor.start_monitor()
     except KeyboardInterrupt:
         rich.print("Exiting...")
         sys.exit(0)

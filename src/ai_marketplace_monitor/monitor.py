@@ -433,6 +433,66 @@ class MarketplaceMonitor:
                 if self.logger:
                     self.logger.debug(f"Failed to check item {url}: {e}")
 
+    def run_once(self: "MarketplaceMonitor") -> None:
+        """Run all searches once without scheduling."""
+        # Load configuration
+        self.load_config_file()
+        self.load_ai_agents()
+
+        assert self.config is not None
+        self.browser = self._launch_browser()
+        assert self.browser is not None
+
+        # Process each marketplace and item
+        for marketplace_config in self.config.marketplace.values():
+            if marketplace_config.enabled is False:
+                continue
+
+            marketplace_class = supported_marketplaces[marketplace_config.market_type]
+            if marketplace_config.name in self.active_marketplaces:
+                marketplace = self.active_marketplaces[marketplace_config.name]
+            else:
+                marketplace = marketplace_class(
+                    marketplace_config.name, self.browser, None, self.logger
+                )
+                self.active_marketplaces[marketplace_config.name] = marketplace
+
+            # Configure marketplace
+            marketplace.configure(
+                marketplace_config,
+                translator=self._select_translator(marketplace_config.language),
+            )
+
+            # Search for each item
+            for item_config in self.config.item.values():
+                if item_config.enabled is False:
+                    continue
+
+                if (
+                    item_config.marketplace is None
+                    or item_config.marketplace == marketplace_config.name
+                ):
+                    # Create marketplace-specific item config
+                    valid_fields = self.get_valid_fields_for_marketplace(marketplace_class)
+                    filtered_dict = {
+                        k: v for k, v in item_config.__dict__.items() if k in valid_fields
+                    }
+                    marketplace_specific_item_config = marketplace_class.get_item_config(
+                        **filtered_dict
+                    )
+
+                    # Run the search immediately
+                    self.search_item(
+                        marketplace_config,
+                        marketplace,
+                        marketplace_specific_item_config,
+                    )
+
+        if self.logger:
+            self.logger.info(
+                f"""{hilight("[Once]", "succ")} Completed one-time search across all marketplaces."""
+            )
+
     def start_monitor(self: "MarketplaceMonitor") -> None:
         """Main function to monitor the marketplace."""
         # start a browser with playwright, cannot use with statement since the jobs will be
