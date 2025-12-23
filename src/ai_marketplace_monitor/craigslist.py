@@ -447,7 +447,11 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
         )
 
         # Title validation: treat empty strings as None
-        title_matches = normalized_title is None or details.title == normalized_title
+        title_matches = (
+            normalized_title is None
+            or details is None
+            or details.title == normalized_title
+        )
 
         if details is not None and price_matches and title_matches:
             # if the price and title are the same, we assume everything else is unchanged.
@@ -564,6 +568,16 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
         description_available: bool = True,
     ) -> bool:
         """Filter listings based on keywords, location, and sellers"""
+        # Check for keyword spam in description before checking keywords
+        if description_available and item.description:
+            from .utils import detect_keyword_spam
+            if detect_keyword_spam(item.description, logger=self.logger):
+                if self.logger:
+                    self.logger.info(
+                        f"""{hilight("[Skip]", "fail")} Exclude {hilight(item.title)} due to {hilight("keyword spam detected", "fail")} in description"""
+                    )
+                return False
+
         # Check antikeywords
         antikeywords = item_config.antikeywords
         if antikeywords and (
@@ -571,7 +585,7 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
         ):
             if self.logger:
                 self.logger.info(
-                    f"""{hilight("[Skip]", "fail")} Exclude {hilight(item.title)} due to {hilight("excluded keywords", "fail")}: {", ".join(antikeywords)}"""
+                    f"""{hilight("[Skip]", "fail")} Exclude {hilight(item.title)} due to {hilight("excluded keywords", "fail")}: {", ".join(antikeywords) if isinstance(antikeywords, list) else antikeywords}"""
                 )
             return False
 
@@ -681,8 +695,21 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                                 price=listing.price,
                                 title=listing.title,
                             )
+
+                            if self.logger:
+                                self.logger.debug(
+                                    f"[Detail Fetch] {detailed_listing.title} - "
+                                    f"from_cache={from_cache}, "
+                                    f"desc_len={len(detailed_listing.description)}"
+                                )
+
                             # Check filters again with description
                             if self.check_listing(detailed_listing, item):
+                                if self.logger:
+                                    self.logger.debug(
+                                        f"[Filter Pass] {detailed_listing.title} - "
+                                        f"Passed all filters, yielding result"
+                                    )
                                 yield detailed_listing
 
                             # Only delay if we fetched from web (not cache)
@@ -693,12 +720,11 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                                 self.logger.error(
                                     f"{hilight('[Error]', 'fail')} Failed to get details for {listing.post_url}: {e}"
                                 )
-                            # If we couldn't get details, yield the basic listing
-                            yield listing
+                            raise
 
                 except Exception as e:
                     if self.logger:
                         self.logger.error(
-                            f"{hilight('[Error]', 'fail')} Failed to search {city}: {e}"
+                            f"{hilight('[Error]', 'fail')} Failed to process search results for {city}: {e}"
                         )
-                    continue
+                    raise

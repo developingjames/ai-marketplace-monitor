@@ -479,6 +479,72 @@ def is_substring(
     return evaluate_expression(parsed)
 
 
+def detect_keyword_spam(text: str, logger: Logger | None = None) -> bool:
+    """Detect if text contains keyword spam patterns.
+
+    Returns True if spam is detected, False otherwise.
+    """
+    if not text:
+        return False
+
+    # Common equipment/vehicle brands that appear in spam
+    spam_brands = [
+        "kubota", "john deere", "caterpillar", "bobcat", "case", "new holland",
+        "massey ferguson", "ford", "mahindra", "kioti", "yanmar", "deutz",
+        "fendt", "claas", "jcb", "kenworth", "peterbilt", "freightliner",
+        "volvo", "mack", "international", "takeuchi", "komatsu", "kobelco",
+        "hitachi", "doosan", "hyundai", "gehl", "terex", "vermeer"
+    ]
+
+    normalized = normalize_string(text)
+
+    # Pattern 1: Count how many different brands appear
+    brand_count = sum(1 for brand in spam_brands if brand in normalized)
+    if brand_count >= 10:
+        if logger:
+            logger.info(f"[Spam Detector] Found {brand_count} different brands - likely spam")
+        return True
+
+    # Pattern 2: Check for comma-separated lists (spam signature)
+    # Count commas - legitimate descriptions rarely have 50+ commas
+    comma_count = text.count(',')
+    if comma_count >= 50:
+        if logger:
+            logger.info(f"[Spam Detector] Found {comma_count} commas - likely spam list")
+        return True
+
+    # Pattern 3: Check for excessive length (most spam is very long)
+    if len(text) > 3000:
+        # Check if it has high keyword density in the long portion
+        # Split into chunks and check if latter chunks have more brands than early ones
+        chunk_size = 1000
+        if len(text) > chunk_size * 2:
+            first_chunk = normalize_string(text[:chunk_size])
+            last_chunk = normalize_string(text[-chunk_size:])
+
+            brands_in_first = sum(1 for brand in spam_brands if brand in first_chunk)
+            brands_in_last = sum(1 for brand in spam_brands if brand in last_chunk)
+
+            # If the end has way more brands than the beginning, it's likely spam appended
+            if brands_in_last > brands_in_first * 3 and brands_in_last >= 5:
+                if logger:
+                    logger.info(
+                        f"[Spam Detector] Brand density in end ({brands_in_last}) >> start ({brands_in_first}) - likely spam"
+                    )
+                return True
+
+    # Pattern 4: Check for model number spam (e.g., "1023E, 1025R, 2210, 2305...")
+    # Count alphanumeric model-like patterns
+    import re
+    model_patterns = re.findall(r'\b[A-Z]{0,3}\d{3,5}[A-Z]{0,3}\b', text.upper())
+    if len(model_patterns) >= 30:
+        if logger:
+            logger.info(f"[Spam Detector] Found {len(model_patterns)} model numbers - likely spam")
+        return True
+
+    return False
+
+
 class ChangeHandler(FileSystemEventHandler):
     def __init__(self: "ChangeHandler", files: List[str]) -> None:
         self.changed = False
