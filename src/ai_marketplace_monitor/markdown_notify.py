@@ -188,15 +188,6 @@ class MarkdownNotificationConfig(PushNotificationConfig):
                 )
             return False
 
-        # Create output directory
-        try:
-            output_path = Path(self.markdown_output_dir)
-            output_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            if logger:
-                logger.error(f"""{hilight("[Markdown]", "fail")} Failed to create output directory: {e}""")
-            return False
-
         # Track how many files we successfully write
         files_written = 0
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -206,7 +197,24 @@ class MarkdownNotificationConfig(PushNotificationConfig):
             if ns == NotificationStatus.NOTIFIED and not force:
                 continue
 
-            # Skip if file exists and we're not overwriting
+            # Generate output directory path with placeholders
+            output_dir = self.markdown_output_dir.format(
+                marketplace=listing.marketplace,
+                id=listing.id,
+                timestamp=timestamp,
+                title=self._sanitize_filename(listing.title[:50]),
+                name=listing.name,
+            )
+
+            # Create output directory for this listing
+            try:
+                output_path = Path(output_dir)
+                output_path.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                if logger:
+                    logger.error(f"""{hilight("[Markdown]", "fail")} Failed to create output directory: {e}""")
+                continue
+
             # Generate filename
             filename_base = self.markdown_filename_format.format(
                 marketplace=listing.marketplace,
