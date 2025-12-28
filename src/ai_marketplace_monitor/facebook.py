@@ -92,6 +92,7 @@ class FacebookMarketItemCommonConfig(BaseConfig):
     date_listed: List[int] | None = None
     delivery_method: List[str] | None = None
     category: str | None = None
+    search_distance: int | None = None  # Accept Craigslist's search_distance for cross-compatibility
 
     def handle_seller_locations(self: "FacebookMarketItemCommonConfig") -> None:
         if self.seller_locations is None:
@@ -401,7 +402,21 @@ class FacebookMarketplace(Marketplace):
         found = {}
         search_city = item_config.search_city or self.config.search_city or []
         city_name = item_config.city_name or self.config.city_name or []
+
+        # Precedence for radius: radius (legacy list) > search_radius (unified int) > search_distance (cross-compat)
         radiuses = item_config.radius or self.config.radius
+        if radiuses is None:
+            # Check for unified search_radius or cross-compatible search_distance
+            unified_radius = (
+                item_config.search_radius
+                or self.config.search_radius
+                or item_config.search_distance
+                or self.config.search_distance
+            )
+            if unified_radius is not None:
+                # Convert single value to list for compatibility with zip()
+                radiuses = [unified_radius]
+
         currencies = item_config.currency or self.config.currency
 
         # this should not happen because `Config.validate_items` has checked this

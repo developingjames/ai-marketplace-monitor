@@ -84,7 +84,7 @@ class CraigslistMarketItemCommonConfig(BaseConfig):
     has_image: bool | None = None
     search_nearby: bool | None = None
     bundle_duplicates: bool | None = None
-    search_distance: int | None = None
+    search_distance: int | None = None  # Legacy Craigslist-specific parameter
     search_lat: float | None = None
     search_lon: float | None = None
     category: str | None = None
@@ -258,7 +258,13 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
             params.append(f"max_price={price_value}")
 
         # Distance filter with lat/lon coordinates
-        search_distance = item_config.search_distance or self.config.search_distance
+        # Precedence: item-specific (search_distance > search_radius) > marketplace defaults
+        search_distance = (
+            item_config.search_distance
+            or item_config.search_radius
+            or self.config.search_distance
+            or self.config.search_radius
+        )
         search_lat = item_config.search_lat or self.config.search_lat
         search_lon = item_config.search_lon or self.config.search_lon
 

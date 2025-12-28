@@ -8,7 +8,7 @@ import humanize
 import inflect
 import rich
 import schedule  # type: ignore
-from playwright.sync_api import Browser, Playwright, sync_playwright
+from playwright.sync_api import Browser, BrowserContext, Playwright, sync_playwright
 from rich.pretty import pretty_repr
 from rich.prompt import Prompt
 
@@ -87,8 +87,13 @@ class MarketplaceMonitor:
                 doze(60, self.config_files, self.keyboard_monitor)
                 continue
 
-    def _launch_browser(self: "MarketplaceMonitor") -> Browser:
-        """Launch a browser, preferring Chromium if available, otherwise any installed browser."""
+    def _launch_browser(self: "MarketplaceMonitor") -> Browser | BrowserContext:
+        """Launch a browser with persistent context to save cookies and login state."""
+        from pathlib import Path
+
+        # Use persistent context directory in the user's home folder
+        user_data_dir = Path.home() / ".ai-marketplace-monitor" / "browser-data"
+
         # Try browsers in order of preference
         browser_types = [
             ("chromium", self.playwright.chromium),
@@ -99,13 +104,21 @@ class MarketplaceMonitor:
         for browser_name, browser_type in browser_types:
             try:
                 if self.logger:
-                    self.logger.debug(f"Attempting to launch {browser_name} browser...")
-                browser = browser_type.launch(headless=self.headless)
+                    self.logger.debug(f"Attempting to launch {browser_name} browser with persistent context...")
+
+                # Use launch_persistent_context to save cookies, local storage, and device fingerprint
+                context = browser_type.launch_persistent_context(
+                    str(user_data_dir / browser_name),
+                    headless=self.headless,
+                    # Set a consistent user agent and viewport to maintain device fingerprint
+                    viewport={'width': 1920, 'height': 1080},
+                )
+
                 if self.logger:
                     self.logger.info(
-                        f"""{hilight("[Browser]", "info")} Successfully launched {browser_name} browser."""
+                        f"""{hilight("[Browser]", "info")} Successfully launched {browser_name} browser with persistent context."""
                     )
-                return browser
+                return context
             except Exception as e:
                 if self.logger:
                     self.logger.debug(f"Failed to launch {browser_name}: {e}")
@@ -221,7 +234,13 @@ class MarketplaceMonitor:
                     )
                 counter.increment(CounterItem.EXCLUDED_LISTING, item_config.name)
                 continue
-            new_listings.append(listing)
+
+            # Create a copy of the listing for this item to prevent mutation issues
+            # when the same listing is found by multiple items
+            from dataclasses import replace
+            listing_for_item = replace(listing, name=item_config.name)
+
+            new_listings.append(listing_for_item)
             listing_ratings.append(res)
 
         p = inflect.engine()
@@ -718,10 +737,13 @@ class MarketplaceMonitor:
                     or marketplace_config.notify
                     or list(self.config.user.keys())
                 )
-                # for notification usages
-                listing.name = item_config.name
+                # Create a copy of the listing for this item to prevent mutation issues
+                # when the same listing is found by multiple items
+                from dataclasses import replace
+                listing_for_item = replace(listing, name=item_config.name)
+
                 for user in users_to_notify:
-                    ns = User(self.config.user[user], self.logger).notification_status(listing)
+                    ns = User(self.config.user[user], self.logger).notification_status(listing_for_item)
                     if self.logger:
                         if ns == NotificationStatus.NOTIFIED:
                             self.logger.info(

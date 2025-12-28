@@ -96,8 +96,8 @@ class User:
     def get_config(cls: Type["User"], **kwargs: Any) -> UserConfig:
         return UserConfig(**kwargs)
 
-    def notified_key(self: "User", listing: Listing) -> Tuple[str, str, str, str]:
-        return (CacheType.USER_NOTIFIED.value, listing.marketplace, listing.id, self.name)
+    def notified_key(self: "User", listing: Listing) -> Tuple[str, str, str, str, str]:
+        return (CacheType.USER_NOTIFIED.value, listing.marketplace, listing.id, listing.name, self.name)
 
     def to_cache(self: "User", listing: Listing, local_cache: Cache | None = None) -> None:
         (cache if local_cache is None else local_cache).set(

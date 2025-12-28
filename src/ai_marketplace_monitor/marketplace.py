@@ -36,8 +36,10 @@ class MarketItemCommonConfig(BaseConfig):
     notify: List[str] | None = None
     search_city: List[str] | None = None
     city_name: List[str] | None = None
-    # radius must be processed after search_city
+    # radius must be processed after search_city (legacy Facebook parameter)
     radius: List[int] | None = None
+    # Unified search radius parameter (works for all marketplaces)
+    search_radius: int | None = None
     currency: List[str] | None = None
     search_interval: int | None = None
     max_search_interval: int | None = None
@@ -503,6 +505,8 @@ class Marketplace(Generic[TMarketplaceConfig, TItemConfig]):
             self.page = None
 
     def create_page(self: "Marketplace", swap_proxy: bool = False) -> Page:
+        from playwright.sync_api import BrowserContext
+
         assert self.browser is not None
 
         # if there is an existing page, asked to swap_proxy, and there is an proxy_server
@@ -518,14 +522,20 @@ class Marketplace(Generic[TMarketplaceConfig, TItemConfig]):
             self.page = None
 
         if self.page is None:
-            context = self.browser.new_context(
-                proxy=(
-                    None
-                    if self.config.monitor_config is None
-                    else self.config.monitor_config.get_proxy_options()
+            # Check if browser is already a persistent context
+            if isinstance(self.browser, BrowserContext):
+                # If it's already a context, just create a new page
+                self.page = self.browser.new_page()
+            else:
+                # If it's a Browser, create a new context with proxy settings
+                context = self.browser.new_context(
+                    proxy=(
+                        None
+                        if self.config.monitor_config is None
+                        else self.config.monitor_config.get_proxy_options()
+                    )
                 )
-            )
-            self.page = context.new_page()
+                self.page = context.new_page()
         return self.page
 
     def goto_url(self: "Marketplace", url: str, attempt: int = 0) -> None:
