@@ -303,6 +303,8 @@ class MonitorConfig(BaseConfig):
     proxy_bypass: str | None = None
     proxy_username: str | None = None
     proxy_password: str | None = None
+    log_file: str | None = None
+    run_once: bool | None = None
 
     def handle_proxy_server(self: "MonitorConfig") -> None:
         if self.proxy_server is None:

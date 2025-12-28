@@ -729,9 +729,10 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
 
                             if self.logger:
                                 self.logger.debug(
-                                    f"[Detail Fetch] {detailed_listing.title} - "
+                                    f"[Detail Fetch] {detailed_listing.title} (ID: {detailed_listing.id}) - "
                                     f"from_cache={from_cache}, "
-                                    f"desc_len={len(detailed_listing.description)}"
+                                    f"desc_len={len(detailed_listing.description)} "
+                                    f"for item={item.name}"
                                 )
 
                             # Check filters again with description

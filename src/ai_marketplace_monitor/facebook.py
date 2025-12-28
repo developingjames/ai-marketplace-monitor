@@ -543,8 +543,9 @@ class FacebookMarketplace(Marketplace):
                         setattr(listing, attr, getattr(details, attr))
                     listing.name = item_config.name
                     if self.logger:
+                        cache_status = "from_cache=True" if from_cache else "from_cache=False"
                         self.logger.debug(
-                            f"""{hilight("[Retrieve]", "succ")} New item "{listing.title}" from {listing.post_url} is sold by "{listing.seller}" and with description "{listing.description[:100]}..." """
+                            f"""[Detail Fetch] {listing.title} (ID: {listing.id}) - {cache_status}, desc_len={len(listing.description)} for item={item_config.name}"""
                         )
 
                     # Warn if we never managed to extract a description for keyword-based filtering

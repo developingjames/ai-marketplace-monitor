@@ -80,6 +80,13 @@ def main(
         Optional[bool],
         typer.Option("--once", help="Run searches once without scheduling recurring searches."),
     ] = False,
+    log_file: Annotated[
+        Optional[str],
+        typer.Option(
+            "--log-file",
+            help="Custom log file path. Supports {timestamp} placeholder (e.g., 'logs/run-{timestamp}.log'). Defaults to ~/.ai-marketplace-monitor/ai-marketplace-monitor.log",
+        ),
+    ] = None,
     version: Annotated[
         Optional[bool], typer.Option("--version", callback=version_callback, is_eager=True)
     ] = None,
@@ -90,8 +97,53 @@ def main(
         sys.stdout.reconfigure(encoding='utf-8')
         sys.stderr.reconfigure(encoding='utf-8')
 
+    # Load config early to get default values for log_file and run_once
+    from .config import Config
+    default_config = amm_home / "config.toml"
+    config_file_paths = ([default_config] if default_config.exists() else []) + (
+        [x.expanduser().resolve() for x in config_files or []]
+    )
+
+    # Try to load config to get monitor settings, but don't fail if config is invalid
+    # (we'll fail later during actual monitor initialization if needed)
+    monitor_config = None
+    if config_file_paths:
+        try:
+            temp_logger = logging.getLogger("config_loader")
+            temp_config = Config(config_file_paths, temp_logger)
+            monitor_config = temp_config.monitor
+        except Exception:
+            pass  # Will be caught later during monitor initialization
+
+    # Use config values as defaults if CLI arguments not provided
+    if log_file is None and monitor_config and monitor_config.log_file:
+        log_file = monitor_config.log_file
+
+    if not once and monitor_config and monitor_config.run_once:
+        once = monitor_config.run_once
+
     # Create a console without legacy Windows rendering to avoid emoji encoding issues
     console = Console(legacy_windows=False, force_terminal=True)
+
+    # Determine log file path
+    if log_file:
+        # Support {timestamp} placeholder in custom log file path
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_path = Path(log_file.format(timestamp=timestamp))
+        # Create parent directories if they don't exist
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Use regular FileHandler for custom log files (no rotation)
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    else:
+        # Use default rotating log file
+        log_path = amm_home / "ai-marketplace-monitor.log"
+        file_handler = RotatingFileHandler(
+            log_path,
+            encoding="utf-8",
+            maxBytes=1024 * 1024,
+            backupCount=5,
+        )
 
     logging.basicConfig(
         level="DEBUG",
@@ -109,12 +161,7 @@ def main(
                 omit_repeated_times=False,
                 enable_link_path=False,
             ),
-            RotatingFileHandler(
-                amm_home / "ai-marketplace-monitor.log",
-                encoding="utf-8",
-                maxBytes=1024 * 1024,
-                backupCount=5,
-            ),
+            file_handler,
         ],
     )
 
