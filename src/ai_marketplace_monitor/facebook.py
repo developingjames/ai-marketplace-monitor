@@ -403,19 +403,22 @@ class FacebookMarketplace(Marketplace):
         search_city = item_config.search_city or self.config.search_city or []
         city_name = item_config.city_name or self.config.city_name or []
 
-        # Precedence for radius: radius (legacy list) > search_radius (unified int) > search_distance (cross-compat)
-        radiuses = item_config.radius or self.config.radius
+        # Precedence for radius: item-specific params > marketplace params
+        # Within each level: radius (legacy list) > search_radius (unified int) > search_distance (cross-compat)
+        radiuses = item_config.radius
         if radiuses is None:
-            # Check for unified search_radius or cross-compatible search_distance
-            unified_radius = (
-                item_config.search_radius
-                or self.config.search_radius
-                or item_config.search_distance
-                or self.config.search_distance
-            )
+            # Check item-specific unified search_radius or search_distance first
+            unified_radius = item_config.search_radius or item_config.search_distance
             if unified_radius is not None:
                 # Convert single value to list for compatibility with zip()
                 radiuses = [unified_radius]
+            else:
+                # Fall back to marketplace-level radius parameters
+                radiuses = self.config.radius
+                if radiuses is None:
+                    unified_radius = self.config.search_radius or self.config.search_distance
+                    if unified_radius is not None:
+                        radiuses = [unified_radius]
 
         currencies = item_config.currency or self.config.currency
 
