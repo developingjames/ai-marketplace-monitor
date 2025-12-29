@@ -14,7 +14,7 @@ else:
 from .ai import DeepSeekBackend, OllamaBackend, OpenAIBackend, TAIConfig
 from .craigslist import CraigslistMarketplace
 from .facebook import FacebookMarketplace
-from .marketplace import TItemConfig, TMarketplaceConfig
+from .marketplace import ItemConfig, TItemConfig, TMarketplaceConfig
 from .notification import NotificationConfig
 from .region import RegionConfig
 from .user import User, UserConfig
@@ -179,22 +179,33 @@ class Config(Generic[TAIConfig, TItemConfig, TMarketplaceConfig]):
                         f"Item {hilight(item_name)} specifies a marketplace that does not exist."
                     )
 
-            for marketplace_name, markerplace_config in config["marketplace"].items():
-                marketplace_class = supported_marketplaces[
-                    markerplace_config.get("market_type", "facebook")
-                ]
-                if (
-                    "marketplace" not in item_config
-                    or item_config["marketplace"] == marketplace_name
-                ):
-                    # use the first available marketplace to create config,
-                    # but keep marketplace=None if not specified so it searches all marketplaces
-                    self.item[item_name] = marketplace_class.get_item_config(
-                        name=item_name,
-                        marketplace=item_config.get("marketplace"),  # Keep None if not specified
-                        **{x: y for x, y in item_config.items() if x != "marketplace"},
-                    )
-                    break
+            # Create a generic ItemConfig that contains ALL fields from TOML
+            # Marketplace-specific filtering will happen later in monitor.py
+            # We need to filter to only valid ItemConfig base class fields
+            valid_base_fields = set(ItemConfig.__dataclass_fields__.keys())
+            base_kwargs = {
+                k: v for k, v in item_config.items()
+                if k in valid_base_fields or k == "marketplace"
+            }
+
+            # Store all extra fields (marketplace-specific) in a dict for later use
+            extra_fields = {
+                k: v for k, v in item_config.items()
+                if k not in valid_base_fields and k != "marketplace"
+            }
+
+            # Create base ItemConfig with extra fields stored as attributes
+            item_obj = ItemConfig(
+                name=item_name,
+                marketplace=item_config.get("marketplace"),
+                **{k: v for k, v in base_kwargs.items() if k not in ["name", "marketplace"]}
+            )
+
+            # Dynamically add marketplace-specific fields to the object
+            for key, value in extra_fields.items():
+                setattr(item_obj, key, value)
+
+            self.item[item_name] = item_obj
 
     def validate_sections(self: "Config", config: Dict[str, Any]) -> None:
         # check for required sections

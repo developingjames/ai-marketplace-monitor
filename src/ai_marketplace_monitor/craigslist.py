@@ -227,7 +227,10 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
 
     @classmethod
     def get_item_config(cls: Type["CraigslistMarketplace"], **kwargs: Any) -> CraigslistItemConfig:
-        return CraigslistItemConfig(**kwargs)
+        # Filter kwargs to only include fields that exist in CraigslistItemConfig
+        valid_fields = set(cls.ItemConfigClass.__dataclass_fields__.keys())
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_fields}
+        return CraigslistItemConfig(**filtered_kwargs)
 
     def build_search_url(
         self: "CraigslistMarketplace",
@@ -285,10 +288,14 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
         if has_image:
             params.append("hasPic=1")
 
-        # Search nearby areas
-        search_nearby = item_config.search_nearby or self.config.search_nearby
-        if search_nearby:
-            params.append("searchNearby=1")
+        # Search nearby areas - item-specific setting takes precedence
+        search_nearby = (
+            item_config.search_nearby
+            if item_config.search_nearby is not None
+            else self.config.search_nearby
+        )
+        if search_nearby is not None:
+            params.append(f"searchNearby={1 if search_nearby else 0}")
 
         # Bundle duplicates
         bundle_duplicates = item_config.bundle_duplicates or self.config.bundle_duplicates
@@ -322,7 +329,7 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
         return url + "?" + "&".join(params)
 
     def parse_search_results(
-        self: "CraigslistMarketplace", page: Page, item_name: str
+        self: "CraigslistMarketplace", page: Page, item_name: str, search_nearby: bool | None = None
     ) -> List[Listing]:
         """Parse Craigslist search results page"""
         listings = []
@@ -337,8 +344,39 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                 )
             return listings
 
+        # Check for nearby separator - this divides local results from nearby area results
+        nearby_separator = page.query_selector(".nearby-separator")
+
         # Get all listing elements
         result_elements = page.query_selector_all(".cl-search-result")
+
+        # If search_nearby is False and separator exists, filter out nearby results
+        if search_nearby is False and nearby_separator:
+            # Only keep results that appear before the separator in DOM order
+            filtered_elements = []
+            for element in result_elements:
+                # Check if this element comes before the separator
+                is_before = element.evaluate(
+                    """(el, sep) => {
+                        let current = el;
+                        while (current) {
+                            if (current === sep) return false;
+                            current = current.nextElementSibling;
+                        }
+                        return true;
+                    }""",
+                    nearby_separator
+                )
+                if is_before:
+                    filtered_elements.append(element)
+
+            if self.logger and len(filtered_elements) < len(result_elements):
+                excluded_count = len(result_elements) - len(filtered_elements)
+                self.logger.info(
+                    f"{hilight('[Filter]', 'info')} Excluded {excluded_count} nearby area results (search_nearby=false)"
+                )
+
+            result_elements = filtered_elements
 
         for element in result_elements:
             try:
@@ -685,6 +723,13 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                 )
             return
 
+        # Determine search_nearby setting (item-specific overrides marketplace default)
+        search_nearby = (
+            item.search_nearby
+            if item.search_nearby is not None
+            else self.config.search_nearby
+        )
+
         # Search each city
         for city in search_cities:
             for search_phrase in item.search_phrases:
@@ -704,8 +749,8 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
                     self.goto_url(url)
                     time.sleep(2)  # Brief delay to let page load
 
-                    # Parse search results
-                    listings = self.parse_search_results(page, item.name)
+                    # Parse search results with search_nearby setting
+                    listings = self.parse_search_results(page, item.name, search_nearby)
 
                     if self.logger:
                         self.logger.info(

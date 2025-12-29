@@ -273,7 +273,10 @@ class FacebookMarketplace(Marketplace):
 
     @classmethod
     def get_item_config(cls: Type["FacebookMarketplace"], **kwargs: Any) -> FacebookItemConfig:
-        return FacebookItemConfig(**kwargs)
+        # Filter kwargs to only include fields that exist in FacebookItemConfig
+        valid_fields = set(cls.ItemConfigClass.__dataclass_fields__.keys())
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_fields}
+        return FacebookItemConfig(**filtered_kwargs)
 
     def login(self: "FacebookMarketplace") -> None:
         assert self.browser is not None
