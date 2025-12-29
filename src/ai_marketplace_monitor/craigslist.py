@@ -356,14 +356,16 @@ class CraigslistMarketplace(Marketplace[CraigslistMarketplaceConfig, CraigslistI
             filtered_elements = []
             for element in result_elements:
                 # Check if this element comes before the separator
+                # Logic: Walk forward through siblings. If we hit the separator, element is BEFORE it.
+                # If we reach the end without finding it, element is AFTER it.
                 is_before = element.evaluate(
                     """(el, sep) => {
                         let current = el;
                         while (current) {
-                            if (current === sep) return false;
+                            if (current === sep) return true;
                             current = current.nextElementSibling;
                         }
-                        return true;
+                        return false;
                     }""",
                     nearby_separator
                 )
