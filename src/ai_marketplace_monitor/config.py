@@ -14,6 +14,7 @@ else:
 from .ai import DeepSeekBackend, OllamaBackend, OpenAIBackend, TAIConfig
 from .craigslist import CraigslistMarketplace
 from .facebook import FacebookMarketplace
+from .tractorhouse import TractorHouseMarketplace
 from .marketplace import ItemConfig, TItemConfig, TMarketplaceConfig
 from .notification import NotificationConfig
 from .region import RegionConfig
@@ -23,6 +24,7 @@ from .utils import MonitorConfig, Translator, hilight, merge_dicts, should_searc
 supported_marketplaces = {
     "facebook": FacebookMarketplace,
     "craigslist": CraigslistMarketplace,
+    "tractorhouse": TractorHouseMarketplace,
 }
 supported_ai_backends = {
     "deepseek": DeepSeekBackend,

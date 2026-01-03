@@ -21,6 +21,7 @@ from .utils import (
 class MarketPlace(Enum):
     FACEBOOK = "facebook"
     CRAIGSLIST = "craigslist"
+    TRACTORHOUSE = "tractorhouse"
 
 
 @dataclass
