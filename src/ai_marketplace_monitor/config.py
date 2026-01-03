@@ -319,7 +319,10 @@ class Config(Generic[TAIConfig, TItemConfig, TMarketplaceConfig]):
                 if item_config.enabled is False:
                     continue
                 if should_search_item_on_marketplace(item_config.marketplace, marketplace_config.name):
-                    if not item_config.search_city and not marketplace_config.search_city:
-                        raise ValueError(
-                            f"No search_city or search_region is specified for {item_config.name} or market {marketplace_config.name}"
-                        )
+                    # Only require search_city for Facebook Marketplace
+                    market_type = getattr(marketplace_config, 'market_type', None)
+                    if market_type == 'facebook' or (not market_type and 'facebook' in marketplace_config.name.lower()):
+                        if not item_config.search_city and not marketplace_config.search_city:
+                            raise ValueError(
+                                f"No search_city or search_region is specified for {item_config.name} or market {marketplace_config.name}"
+                            )

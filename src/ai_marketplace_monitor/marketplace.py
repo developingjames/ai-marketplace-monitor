@@ -537,6 +537,7 @@ class Marketplace(Generic[TMarketplaceConfig, TItemConfig]):
                     )
                 )
                 self.page = context.new_page()
+
         return self.page
 
     def goto_url(self: "Marketplace", url: str, attempt: int = 0) -> None:

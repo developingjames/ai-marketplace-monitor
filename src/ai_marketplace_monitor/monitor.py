@@ -107,7 +107,7 @@ class MarketplaceMonitor:
         for browser_name, browser_type in browser_types:
             try:
                 if self.logger:
-                    self.logger.debug(f"Attempting to launch {browser_name} browser with persistent context...")
+                    self.logger.info(f"{hilight('[Browser]', 'info')} Attempting to launch {browser_name} browser...")
 
                 # Use launch_persistent_context to save cookies, local storage, and device fingerprint
                 context = browser_type.launch_persistent_context(
@@ -119,12 +119,12 @@ class MarketplaceMonitor:
 
                 if self.logger:
                     self.logger.info(
-                        f"""{hilight("[Browser]", "info")} Successfully launched {browser_name} browser with persistent context."""
+                        f"""{hilight("[Browser]", "succ")} Successfully launched {browser_name} browser with persistent context."""
                     )
                 return context
             except Exception as e:
                 if self.logger:
-                    self.logger.debug(f"Failed to launch {browser_name}: {e}")
+                    self.logger.warning(f"{hilight('[Browser]', 'warn')} Failed to launch {browser_name}: {e}")
                 continue
 
         # If all fail, raise an error
