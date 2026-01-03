@@ -51,6 +51,31 @@ amm_home.mkdir(parents=True, exist_ok=True)
 cache = Cache(amm_home)
 
 
+def should_search_item_on_marketplace(
+    item_marketplace: str | List[str] | None,
+    marketplace_name: str
+) -> bool:
+    """Check if an item should be searched on a specific marketplace.
+
+    Args:
+        item_marketplace: The marketplace(s) specified in item config (str, list, or None)
+        marketplace_name: The name of the marketplace to check
+
+    Returns:
+        True if the item should be searched on this marketplace, False otherwise
+    """
+    if item_marketplace is None:
+        return True  # No restriction, search all marketplaces
+
+    if isinstance(item_marketplace, str):
+        return item_marketplace == marketplace_name
+
+    if isinstance(item_marketplace, list):
+        return marketplace_name in item_marketplace
+
+    return False
+
+
 TConfigType = TypeVar("TConfigType", bound="BaseConfig")
 
 

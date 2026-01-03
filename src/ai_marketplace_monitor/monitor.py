@@ -1,5 +1,6 @@
 import sys
 import time
+import traceback
 from logging import Logger
 from pathlib import Path
 from typing import ClassVar, List
@@ -29,6 +30,7 @@ from .utils import (
     counter,
     doze,
     hilight,
+    should_search_item_on_marketplace,
 )
 
 
@@ -81,8 +83,9 @@ class MarketplaceMonitor:
                 if last_invalid_hash != new_file_hash:
                     last_invalid_hash = new_file_hash
                     if self.logger:
+                        tb = traceback.format_exc()
                         self.logger.error(
-                            f"""{hilight("[Config]", "fail")} Error parsing:\n\n{hilight(str(e), "fail")}\n\nPlease fix the configuration and I will try again as soon as you are done."""
+                            f"""{hilight("[Config]", "fail")} Error parsing:\n\n{hilight(str(e), "fail")}\n\nFull traceback:\n{tb}\n\nPlease fix the configuration and I will try again as soon as you are done."""
                         )
                 doze(60, self.config_files, self.keyboard_monitor)
                 continue
@@ -173,11 +176,7 @@ class MarketplaceMonitor:
         """Search for an item on the marketplace."""
         new_listings: List[Listing] = []
         listing_ratings = []
-        # users to notify is determined from item, then marketplace, then all users
-        assert self.config is not None
-        users_to_notify = (
-            item_config.notify or marketplace_config.notify or list(self.config.user.keys())
-        )
+        users_to_notify = self._get_users_to_notify(item_config, marketplace_config)
         for listing in marketplace.search(item_config):
             # duplicated ID should not happen, but sellers could repost the same listing,
             # potentially under different seller names
@@ -202,30 +201,8 @@ class MarketplaceMonitor:
             res = self.evaluate_by_ai(
                 listing, item_config=item_config, marketplace_config=marketplace_config
             )
-            if self.logger:
-                if res.comment == AIResponse.NOT_EVALUATED:
-                    if res.name:
-                        self.logger.info(
-                            f"""{hilight("[AI]", res.style)} {res.name or "AI"} did not evaluate {hilight(listing.title)}."""
-                        )
-                    else:
-                        self.logger.info(
-                            f"""{hilight("[AI]", res.style)} No AI available to evaluate {hilight(listing.title)}."""
-                        )
-                else:
-                    self.logger.info(
-                        f"""{hilight("[AI]", res.style)} {res.name or "AI"} concludes {hilight(f"{res.conclusion} ({res.score}): {res.comment}", res.style)} for listing {hilight(listing.title)}."""
-                    )
-            if item_config.rating:
-                acceptable_rating = item_config.rating[
-                    0 if item_config.searched_count == 0 else -1
-                ]
-            elif marketplace_config.rating:
-                acceptable_rating = marketplace_config.rating[
-                    0 if item_config.searched_count == 0 else -1
-                ]
-            else:
-                acceptable_rating = 3
+            self._log_ai_evaluation(res, listing.title)
+            acceptable_rating = self._get_acceptable_rating(item_config, marketplace_config)
 
             if res.score < acceptable_rating:
                 if self.logger:
@@ -307,6 +284,81 @@ class MarketplaceMonitor:
             )
         return set(marketplace_class.ItemConfigClass.__dataclass_fields__.keys())
 
+    def _get_users_to_notify(
+        self: "MarketplaceMonitor",
+        item_config: TItemConfig,
+        marketplace_config: TMarketplaceConfig,
+    ) -> List[str]:
+        """Get the list of users to notify for a listing.
+
+        Users to notify is determined from item config, then marketplace config,
+        then all configured users.
+
+        Args:
+            item_config: The item configuration
+            marketplace_config: The marketplace configuration
+
+        Returns:
+            List of user names to notify
+        """
+        assert self.config is not None
+        return (
+            item_config.notify or marketplace_config.notify or list(self.config.user.keys())
+        )
+
+    def _get_acceptable_rating(
+        self: "MarketplaceMonitor",
+        item_config: TItemConfig,
+        marketplace_config: TMarketplaceConfig,
+    ) -> int:
+        """Get the acceptable rating threshold for a listing.
+
+        Rating is determined from item config, then marketplace config,
+        with a default of 3. Uses first rating for initial search,
+        last rating for subsequent searches.
+
+        Args:
+            item_config: The item configuration
+            marketplace_config: The marketplace configuration
+
+        Returns:
+            The acceptable rating threshold (1-5)
+        """
+        if item_config.rating:
+            return item_config.rating[0 if item_config.searched_count == 0 else -1]
+        elif marketplace_config.rating:
+            return marketplace_config.rating[0 if item_config.searched_count == 0 else -1]
+        else:
+            return 3
+
+    def _log_ai_evaluation(
+        self: "MarketplaceMonitor",
+        ai_response: AIResponse,
+        listing_title: str,
+    ) -> None:
+        """Log the AI evaluation result.
+
+        Args:
+            ai_response: The AI evaluation response
+            listing_title: The title of the listing being evaluated
+        """
+        if not self.logger:
+            return
+
+        if ai_response.comment == AIResponse.NOT_EVALUATED:
+            if ai_response.name:
+                self.logger.info(
+                    f"""{hilight("[AI]", ai_response.style)} {ai_response.name or "AI"} did not evaluate {hilight(listing_title)}."""
+                )
+            else:
+                self.logger.info(
+                    f"""{hilight("[AI]", ai_response.style)} No AI available to evaluate {hilight(listing_title)}."""
+                )
+        else:
+            self.logger.info(
+                f"""{hilight("[AI]", ai_response.style)} {ai_response.name or "AI"} concludes {hilight(f"{ai_response.conclusion} ({ai_response.score}): {ai_response.comment}", ai_response.style)} for listing {hilight(listing_title)}."""
+            )
+
     def schedule_jobs(self: "MarketplaceMonitor") -> None:
         """Schedule jobs to run periodically."""
         # we reload the config file each time when a scan action is completed
@@ -337,10 +389,7 @@ class MarketplaceMonitor:
                 if item_config.enabled is False:
                     continue
 
-                if (
-                    item_config.marketplace is None
-                    or item_config.marketplace == marketplace_config.name
-                ):
+                if should_search_item_on_marketplace(item_config.marketplace, marketplace_config.name):
                     # Create marketplace-specific item config
                     # Filter fields to only include those valid for this marketplace
                     valid_fields = self.get_valid_fields_for_marketplace(marketplace_class)
@@ -487,10 +536,7 @@ class MarketplaceMonitor:
                 if item_config.enabled is False:
                     continue
 
-                if (
-                    item_config.marketplace is None
-                    or item_config.marketplace == marketplace_config.name
-                ):
+                if should_search_item_on_marketplace(item_config.marketplace, marketplace_config.name):
                     # Create marketplace-specific item config
                     valid_fields = self.get_valid_fields_for_marketplace(marketplace_class)
                     filtered_dict = {
@@ -717,26 +763,9 @@ class MarketplaceMonitor:
                 rating = self.evaluate_by_ai(
                     listing, item_config=item_config, marketplace_config=marketplace_config
                 )
-                if self.logger:
-                    if rating.comment == AIResponse.NOT_EVALUATED:
-                        if rating.name:
-                            self.logger.info(
-                                f"""{hilight("[AI]", rating.style)} {rating.name or "AI"} did not evaluate {hilight(listing.title)}."""
-                            )
-                        else:
-                            self.logger.info(
-                                f"""{hilight("[AI]", rating.style)} No AI available to evaluate {hilight(listing.title)}."""
-                            )
-                    else:
-                        self.logger.info(
-                            f"""{hilight("[AI]", rating.style)} {rating.name or "AI"} concludes {hilight(f"{rating.conclusion} ({rating.score}): {rating.comment}", rating.style)} for listing {hilight(listing.title)}."""
-                        )
+                self._log_ai_evaluation(rating, listing.title)
                 # notification status?
-                users_to_notify = (
-                    item_config.notify
-                    or marketplace_config.notify
-                    or list(self.config.user.keys())
-                )
+                users_to_notify = self._get_users_to_notify(item_config, marketplace_config)
                 # Create a copy of the listing for this item to prevent mutation issues
                 # when the same listing is found by multiple items
                 from dataclasses import replace

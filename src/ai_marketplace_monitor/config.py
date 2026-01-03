@@ -18,7 +18,7 @@ from .marketplace import ItemConfig, TItemConfig, TMarketplaceConfig
 from .notification import NotificationConfig
 from .region import RegionConfig
 from .user import User, UserConfig
-from .utils import MonitorConfig, Translator, hilight, merge_dicts
+from .utils import MonitorConfig, Translator, hilight, merge_dicts, should_search_item_on_marketplace
 
 supported_marketplaces = {
     "facebook": FacebookMarketplace,
@@ -174,10 +174,16 @@ class Config(Generic[TAIConfig, TItemConfig, TMarketplaceConfig]):
         for item_name, item_config in config["item"].items():
             # if marketplace is specified, it must exist
             if "marketplace" in item_config:
-                if item_config["marketplace"] not in config["marketplace"]:
-                    raise ValueError(
-                        f"Item {hilight(item_name)} specifies a marketplace that does not exist."
-                    )
+                marketplace_value = item_config["marketplace"]
+                # Handle both string and list of marketplace names
+                marketplaces_to_check = (
+                    [marketplace_value] if isinstance(marketplace_value, str) else marketplace_value
+                )
+                for mp in marketplaces_to_check:
+                    if mp not in config["marketplace"]:
+                        raise ValueError(
+                            f"Item {hilight(item_name)} specifies a marketplace '{mp}' that does not exist."
+                        )
 
             # Create a generic ItemConfig that contains ALL fields from TOML
             # Marketplace-specific filtering will happen later in monitor.py
@@ -310,10 +316,7 @@ class Config(Generic[TAIConfig, TItemConfig, TMarketplaceConfig]):
             for item_config in self.item.values():
                 if item_config.enabled is False:
                     continue
-                if (
-                    item_config.marketplace is None
-                    or item_config.marketplace == marketplace_config.name
-                ):
+                if should_search_item_on_marketplace(item_config.marketplace, marketplace_config.name):
                     if not item_config.search_city and not marketplace_config.search_city:
                         raise ValueError(
                             f"No search_city or search_region is specified for {item_config.name} or market {marketplace_config.name}"
