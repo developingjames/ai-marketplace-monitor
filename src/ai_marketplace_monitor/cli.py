@@ -40,7 +40,7 @@ def main(
         typer.Option(
             "-r",
             "--config",
-            help="Path to one or more configuration files in TOML format. `~/.ai-marketplace-monitor/config.toml will always be read.",
+            help="Path to one or more configuration files in TOML format. Configs are loaded in order: ~/.ai-marketplace-monitor/config.toml, ./config.toml (if present), then CLI-specified files.",
         ),
     ] = None,
     headless: Annotated[
@@ -100,8 +100,13 @@ def main(
     # Load config early to get default values for log_file and run_once
     from .config import Config
     default_config = amm_home / "config.toml"
-    config_file_paths = ([default_config] if default_config.exists() else []) + (
-        [x.expanduser().resolve() for x in config_files or []]
+    local_config = Path.cwd() / "config.toml"
+    # Config files are merged in order (later values override earlier)
+    # Priority: user home config -> local config -> CLI-specified configs
+    config_file_paths = (
+        ([default_config] if default_config.exists() else [])
+        + ([local_config] if local_config.exists() else [])
+        + [x.expanduser().resolve() for x in config_files or []]
     )
 
     # Try to load config to get monitor settings, but don't fail if config is invalid
