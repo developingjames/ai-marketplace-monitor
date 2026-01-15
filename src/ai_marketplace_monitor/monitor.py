@@ -100,8 +100,8 @@ class MarketplaceMonitor:
         # Try browsers in order of preference
         browser_types = [
             ("chromium", self.playwright.chromium),
-            ("firefox", self.playwright.firefox),
-            ("webkit", self.playwright.webkit),
+            # ("firefox", self.playwright.firefox),
+            # ("webkit", self.playwright.webkit),
         ]
 
         for browser_name, browser_type in browser_types:

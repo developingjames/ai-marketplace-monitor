@@ -203,7 +203,7 @@ def main(
 
     if items is not None:
         try:
-            monitor = MarketplaceMonitor(config_files, headless, logger)
+            monitor = MarketplaceMonitor(config_file_paths, headless, logger)
             monitor.check_items(items, for_item)
         except Exception as e:
             logger.error(f"""{hilight("[Check]", "fail")} {e}""")
@@ -214,7 +214,7 @@ def main(
         sys.exit(0)
 
     try:
-        monitor = MarketplaceMonitor(config_files, headless, logger)
+        monitor = MarketplaceMonitor(config_file_paths, headless, logger)
         if once:
             monitor.run_once()
         else:

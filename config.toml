@@ -27,6 +27,7 @@ enabled = true
 [marketplace.facebook]
 search_city = '108384419182002'
 radius=250
+login_wait_time = 120  # seconds to wait for Facebook login (default: 60)
 
 
 [marketplace.craigslist]
