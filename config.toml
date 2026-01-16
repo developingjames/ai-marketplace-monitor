@@ -85,7 +85,7 @@ cache_ignore_price_changes = true
 search_phrases = ["backhoe", "backhoe attachment", "kubota backhoe", "BH77", "tractor backhoe"]
 # Target Kubota backhoes compatible with L series (L3901, L3301, L3901, L4701) and LX series tractors
 keywords = "Kubota AND (BH77 OR BH-77 OR BH65 OR BH-65 OR BH70 OR BH-70 OR BH90 OR BH-90 OR BH92 OR BH-92) OR (backhoe AND (L3901 OR L3301 OR L3901 OR L4701 OR L4760 OR LX2610 OR LX3310 OR 'L series' OR 'LX series'))"
-antikeywords = "miniature toy model"
+antikeywords = "miniature toy model 'quick hitch' 'quick attach adapter' 'skid steer adapter'"
 min_price = 1000
 max_price = 10000
 cache_ignore_price_changes = true
@@ -94,7 +94,7 @@ cache_ignore_price_changes = true
 search_phrases = ["grapple"]
 # Target 60-78" root grapple buckets for loader, quality brands preferred
 keywords = "((grapple OR 'grapple bucket' OR 'root grapple') AND ('Land Pride' OR 'Everything Attachments' OR Wicked OR Woods OR Titan OR 'King Kutter' OR TMG OR Worksaver OR Rhino)) OR ((grapple OR 'grapple bucket' OR 'root grapple') AND ('60' OR '66' OR '72' OR '78') AND (inch OR ft OR foot OR '\"'))"
-antikeywords = "miniature toy model"
+antikeywords = "miniature toy model 'quick hitch' 'quick attach adapter' 'brush grapple' 'log grapple' 'rock grapple' smooth skeleton flat"
 min_price = 300
 max_price = 2000
 cache_ignore_price_changes = true
@@ -103,7 +103,7 @@ cache_ignore_price_changes = true
 search_phrases = ["box blade"]
 # Target 5-7 foot box blades, Cat I hitch, quality brands
 keywords = "(('box blade' OR boxblade) AND ('Land Pride' OR Woods OR 'Bush Hog' OR 'King Kutter' OR Rhino OR 'Everything Attachments' OR Frontier OR 'County Line')) OR (('box blade' OR boxblade) AND ('5 foot' OR '6 foot' OR '7 foot' OR 5ft OR 6ft OR 7ft OR '60 inch' OR '72 inch' OR '84 inch') AND (scarifier OR 'category 1' OR 'cat 1' OR 'cat I'))"
-antikeywords = "miniature toy model shipping storage cardboard packing moving"
+antikeywords = "miniature toy model shipping storage cardboard packing moving 'quick hitch' adapter plate disc harrow cultivator spreader water tank"
 min_price = 100
 max_price = 1500
 cache_ignore_price_changes = true
@@ -111,11 +111,11 @@ cache_ignore_price_changes = true
 [item.auger]
 enabled = true
 marketplace = ["craigslist", "facebook"]
-search_phrases = ["auger"]
+search_phrases = ["auger bit for post hole digger", "post hole auger"]
 # Target 9" auger bits with 2" hex drive, quality brands for tree planting
 keywords = "((auger OR 'auger bit') AND ('Land Pride' OR Woods OR 'King Kutter' OR Lowe OR Titan OR 'Blue Diamond' OR 'Dirty Hand')) OR ((auger OR 'auger bit' OR 'post hole') AND ('9 inch' OR '9\"' OR 9in) AND (hex OR PTO OR tractor))"
-antikeywords = "ice fishing drill cordless electric spade forstner brad installer snake plumbing"
-min_price = 40
+antikeywords = "ice fishing cordless electric spade forstner brad installer snake plumbing"
+min_price = 20
 max_price = 400
 search_radius = 60
 search_nearby = false
@@ -125,13 +125,13 @@ cache_ignore_price_changes = true
 search_phrases = ["grader blade"]
 # Target 5-6 foot rear blades (grader blades), Cat I hitch, quality brands
 keywords = "(('rear blade' OR 'grader blade' OR 'land plane' OR 'rear grader') AND ('Land Pride' OR Woods OR 'Bush Hog' OR 'King Kutter' OR Titan OR Rhino OR Speeco)) OR (('rear blade' OR 'grader blade' OR 'land plane') AND ('5 foot' OR '6 foot' OR 5ft OR 6ft OR '60 inch' OR '72 inch') AND (angle OR offset OR 'category 1' OR 'cat 1'))"
-antikeywords = "miniature toy model"
+antikeywords = "miniature toy model 'quick hitch' 'category 2' 'cat 2' 'cat II'"
 min_price = 200
 max_price = 1500
 cache_ignore_price_changes = true
 
 [item.lift_stacker]
-search_phrases = ["pallet stacker"]
+search_phrases = ["pallet stacker", "lift stacker"]
 # Target manual lift stackers (walk-behind pallet stackers) 5-12 ft lift, 1000-2000 lb capacity
 keywords = "(('pallet stacker' OR 'lift stacker' OR 'manual stacker') AND (Vestil OR 'Big Joe' OR Pake OR Wesco OR Presto OR 'Blue Giant')) OR (('pallet stacker' OR 'lift stacker' OR 'hand stacker') AND (electric OR winch OR hydraulic OR manual) AND (1000lb OR 1500lb OR 2000lb OR '1000 lb' OR '1500 lb'))"
 antikeywords = "miniature toy model jack hoist crane"
@@ -143,16 +143,16 @@ cache_ignore_price_changes = true
 search_phrases = ["three point hitch drawbar", "3pt hitch drawbar", "3pt drawbar", "3 point drawbar"]
 # Target heavy-duty 3-point drawbars, 3000-5000 lb capacity, quality brands
 keywords = "(drawbar AND ('3 point' OR '3pt' OR 'three point' OR 'category 1' OR 'cat 1') AND ('Heavy Hitch' OR 'Land Pride' OR Woods OR Titan OR Speeco OR 'Everything Attachments')) OR (drawbar AND ('3 point' OR '3pt') AND (receiver OR 'ball hitch' OR pintle OR clevis) AND (3000lb OR 5000lb OR 'heavy duty'))"
-antikeywords = "miniature toy lawn garden ATV UTV golf"
+antikeywords = "miniature toy lawn garden ATV UTV golf 'quick hitch' 'category 2' 'cat 2'"
 min_price = 100
 max_price = 600
 cache_ignore_price_changes = true
 
 [item.ballast_box]
 search_phrases = ["ballast box"]
-# Target 3-point ballast boxes, 400-600 lb capacity, Cat I hitch, quality brands
-keywords = "(('ballast box' OR 'weight box' OR 'ballast weight') AND ('3 point' OR '3pt' OR 'three point') AND ('Land Pride' OR Woods OR 'Bush Hog' OR Titan OR 'Everything Attachments' OR 'County Line')) OR (('ballast box' OR 'weight box') AND ('3 point' OR '3pt') AND ('category 1' OR 'cat 1' OR '400 lb' OR '500 lb' OR '600 lb'))"
-antikeywords = "miniature toy"
+# Target tractor ballast/weight boxes - brands or hitch indicators
+keywords = "('ballast box' OR 'weight box') AND ('3 point' OR '3pt' OR 'three point' OR tractor OR Kubota OR 'John Deere' OR JD OR 'Land Pride' OR Woods OR Titan OR 'Everything Attachments' OR 'category 1' OR 'cat 1')"
+antikeywords = "miniature toy imatch i-match 'quick hitch'"
 min_price = 150
 max_price = 700
 cache_ignore_price_changes = true
