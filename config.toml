@@ -140,7 +140,7 @@ max_price = 1500
 cache_ignore_price_changes = true
 
 [item.drawbar]
-search_phrases = ["drawbar"]
+search_phrases = ["three point hitch drawbar", "3pt hitch drawbar", "3pt drawbar", "3 point drawbar"]
 # Target heavy-duty 3-point drawbars, 3000-5000 lb capacity, quality brands
 keywords = "(drawbar AND ('3 point' OR '3pt' OR 'three point' OR 'category 1' OR 'cat 1') AND ('Heavy Hitch' OR 'Land Pride' OR Woods OR Titan OR Speeco OR 'Everything Attachments')) OR (drawbar AND ('3 point' OR '3pt') AND (receiver OR 'ball hitch' OR pintle OR clevis) AND (3000lb OR 5000lb OR 'heavy duty'))"
 antikeywords = "miniature toy lawn garden ATV UTV golf"
