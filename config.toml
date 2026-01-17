@@ -140,6 +140,7 @@ max_price = 1500
 cache_ignore_price_changes = true
 
 [item.drawbar]
+enabled = true
 search_phrases = ["three point hitch drawbar", "3pt hitch drawbar", "3pt drawbar", "3 point drawbar"]
 # Target 3-point drawbars and hitch receivers for compact tractors
 keywords = "drawbar AND ('3 point' OR '3pt' OR 'three point' OR 'category 1' OR 'cat 1' OR receiver OR 'ball hitch' OR pintle OR clevis)"
