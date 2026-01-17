@@ -1,0 +1,215 @@
+[monitor]
+# Optional: Custom log file path with {timestamp} placeholder
+log_file = 'logs/run-{timestamp}.log'
+# Optional: Run once without scheduling recurring searches (default: false)
+run_once = true
+
+[notification.markdown]
+enabled = true
+
+
+[user.me]
+markdown_output_dir = 'D:/Data/Development/GitHub/developingjames/atv_search/tractor_search/{name}/listings/possible'
+
+# Available placeholders for both directory and filename: {marketplace}, {id}, {timestamp}, {title}, {name}
+markdown_filename_format = '{marketplace}_{id}'
+
+# Default: false
+markdown_overwrite_existing = false
+
+# Enable markdown output
+notify_with = ['markdown']
+
+# User must be enabled
+enabled = true
+
+
+[marketplace.facebook]
+search_city = '108384419182002'
+radius=250
+login_wait_time = 120  # seconds to wait for Facebook login (default: 60)
+
+
+[marketplace.craigslist]
+market_type = 'craigslist'
+# Search Columbus with a 250-mile radius using lat/lon coordinates
+search_city = 'columbus'
+search_distance = 250  # Search radius in miles (includes Michigan, Indiana, Kentucky, etc.)
+search_lat = 39.9612  # Columbus, OH latitude
+search_lon = -82.9988  # Columbus, OH longitude
+
+# [marketplace.tractorhouse]
+# market_type = "tractorhouse"
+# category = "1100"  # 1100 = Tractors category
+# states = ["OHIO", "INDIANA", "KENTUCKY", "WEST_VIRGINIA", "PENNSYLVANIA", "MICHIGAN"]
+# # Optional: Set default filters that apply to all items unless overridden
+# #horsepower_min = 30
+# #horsepower_max = 60
+# # year_min = 2015
+
+# [item.test]
+# enabled = true
+# marketplace = "tractorhouse"
+# # search_phrases = ["tractor", "compact tractor", "diesel tractor", "tractor loader backhoe", "TLB", "tractor loader"]
+# search_phrases = ["tractor"]
+# # Target 35-50 HP compact tractors with loaders - expanded model coverage for better recall
+# keywords = "(Kubota AND (L2501 OR L2800 OR L3000 OR L3130 OR L3200 OR L3301 OR L3400 OR L3430 OR L3560 OR L3830 OR L3901 OR L3902 OR L4200 OR L4400 OR L4600 OR L4701 OR L4760 OR L45 OR L47 OR L48 OR MX4800 OR MX5200 OR MX5400)) OR ((\"New Holland\" OR NH) AND (Workmaster OR \"Boomer 35\" OR \"Boomer 40\" OR \"Boomer 45\" OR \"Boomer 50\" OR T1530 OR T1630 OR T2210 OR T2220 OR T2320 OR T2420 OR TC35 OR TC40 OR TC45)) OR ((\"John Deere\" OR JD) AND (2032R OR 2038R OR 3032E OR 3038E OR 3046R OR 3320 OR 3520 OR 3720 OR 4044M OR 4052M OR 4066M OR 4105 OR 4120 OR 4320 OR 4500 OR 4600 OR 4700)) OR ((\"Massey Ferguson\" OR MF) AND (1533 OR 1540 OR 1643 OR 1735E OR 1739E OR 1742 OR 1749 OR 2605 OR 2606 OR 2850E OR 2860E))"
+# antikeywords = "garden zero turn BX sub-compact subcompact salvage Workmaster-90 Workmaster-100 Workmaster-120 Workmaster-150"
+# horsepower_min = 35
+# horsepower_max = 55
+# min_price = 4000
+# max_price = 32000
+# cache_ignore_price_changes = true
+
+[item.utility]
+enabled = false
+search_phrases = ["tractor", "farm tractor", "diesel tractor", "tractor loader backhoe", "TLB", "tractor loader", "utility tractor"]
+# Target 45-70 HP utility tractors with loaders - expanded model coverage for better recall
+keywords = "(Kubota AND (L45 OR L4740 OR L5240 OR L5740 OR L4330 OR L4630 OR L5030 OR M4700 OR M4900 OR M5000 OR M5040 OR M5400 OR M5700 OR M6060 OR M6800 OR M7040)) OR ((\"New Holland\" OR NH) AND (Workmaster OR TC45 OR TC55 OR TC55DA OR \"Workmaster 55\" OR \"Workmaster 65\" OR \"Workmaster 75\" OR TN55 OR TN60 OR TN65 OR TN70 OR \"T4.55\" OR \"T4.65\" OR \"T4.75\")) OR ((\"Massey Ferguson\" OR MF) AND (471 OR 481 OR 4608 OR 4609 OR 4610)) OR ((\"John Deere\" OR JD) AND (5055E OR 5065E OR 5075E OR 5085E OR 5100 OR 5200 OR 5205 OR 5210 OR 5300 OR 5305 OR 5310 OR 5400 OR 5410 OR 5420))"
+antikeywords = "garden compact sub-compact subcompact zero turn mower"
+min_price = 5000
+max_price = 30000
+cache_ignore_price_changes = true 
+
+[item.compact]
+enabled = false
+search_phrases = ["tractor", "compact tractor", "diesel tractor", "tractor loader backhoe", "TLB", "tractor loader"]
+# Target 35-50 HP compact tractors with loaders - expanded model coverage for better recall
+keywords = "(Kubota AND (L2501 OR L2800 OR L3000 OR L3130 OR L3200 OR L3301 OR L3400 OR L3430 OR L3560 OR L3830 OR L3901 OR L3902 OR L4200 OR L4400 OR L4600 OR L4701 OR L4760 OR L45 OR L47 OR L48 OR MX4800 OR MX5200 OR MX5400)) OR ((\"New Holland\" OR NH) AND (Workmaster OR \"Boomer 35\" OR \"Boomer 40\" OR \"Boomer 45\" OR \"Boomer 50\" OR T1530 OR T1630 OR T2210 OR T2220 OR T2320 OR T2420 OR TC35 OR TC40 OR TC45)) OR ((\"John Deere\" OR JD) AND (2032R OR 2038R OR 3032E OR 3038E OR 3046R OR 3320 OR 3520 OR 3720 OR 4044M OR 4052M OR 4066M OR 4105 OR 4120 OR 4320 OR 4500 OR 4600 OR 4700)) OR ((\"Massey Ferguson\" OR MF) AND (1533 OR 1540 OR 1643 OR 1735E OR 1739E OR 1742 OR 1749 OR 2605 OR 2606 OR 2850E OR 2860E))"
+antikeywords = "garden zero turn BX sub-compact subcompact salvage Workmaster-90 Workmaster-100 Workmaster-120 Workmaster-150"
+min_price = 4000
+max_price = 40000
+cache_ignore_price_changes = true
+
+[item.backhoe]
+search_phrases = ["backhoe", "backhoe attachment", "kubota backhoe", "BH77", "tractor backhoe"]
+# Target Kubota backhoes compatible with L series (L3901, L3301, L3901, L4701) and LX series tractors
+keywords = "Kubota AND (BH77 OR BH-77 OR BH65 OR BH-65 OR BH70 OR BH-70 OR BH90 OR BH-90 OR BH92 OR BH-92) OR (backhoe AND (L3901 OR L3301 OR L3901 OR L4701 OR L4760 OR LX2610 OR LX3310 OR 'L series' OR 'LX series'))"
+antikeywords = "miniature toy model 'quick hitch' 'quick attach adapter' 'skid steer adapter'"
+min_price = 1000
+max_price = 10000
+cache_ignore_price_changes = true
+
+[item.grapple]
+search_phrases = ["grapple"]
+# Target 60-78" root grapple buckets for loader, quality brands preferred
+keywords = "((grapple OR 'grapple bucket' OR 'root grapple') AND ('Land Pride' OR 'Everything Attachments' OR Wicked OR Woods OR Titan OR 'King Kutter' OR TMG OR Worksaver OR Rhino)) OR ((grapple OR 'grapple bucket' OR 'root grapple') AND ('60' OR '66' OR '72' OR '78') AND (inch OR ft OR foot OR '\"'))"
+antikeywords = "miniature toy model 'quick hitch' 'quick attach adapter' 'brush grapple' 'log grapple' 'rock grapple' smooth skeleton flat"
+min_price = 300
+max_price = 2000
+cache_ignore_price_changes = true
+
+[item.boxblade]
+search_phrases = ["box blade"]
+# Target 5-7 foot box blades, Cat I hitch, quality brands
+keywords = "(('box blade' OR boxblade) AND ('Land Pride' OR Woods OR 'Bush Hog' OR 'King Kutter' OR Rhino OR 'Everything Attachments' OR Frontier OR 'County Line')) OR (('box blade' OR boxblade) AND ('5 foot' OR '6 foot' OR '7 foot' OR 5ft OR 6ft OR 7ft OR '60 inch' OR '72 inch' OR '84 inch') AND (scarifier OR 'category 1' OR 'cat 1' OR 'cat I'))"
+antikeywords = "miniature toy model shipping storage cardboard packing moving 'quick hitch' adapter plate disc harrow cultivator spreader water tank"
+min_price = 100
+max_price = 1500
+cache_ignore_price_changes = true
+
+[item.auger]
+enabled = true
+marketplace = ["craigslist", "facebook"]
+search_phrases = ["auger bit for post hole digger", "post hole auger"]
+# Target 9" auger bits with 2" hex drive, quality brands for tree planting
+keywords = "((auger OR 'auger bit') AND ('Land Pride' OR Woods OR 'King Kutter' OR Lowe OR Titan OR 'Blue Diamond' OR 'Dirty Hand')) OR ((auger OR 'auger bit' OR 'post hole') AND ('9 inch' OR '9\"' OR 9in) AND (hex OR PTO OR tractor))"
+antikeywords = "ice fishing cordless electric spade forstner brad installer snake plumbing"
+min_price = 20
+max_price = 400
+search_radius = 60
+search_nearby = false
+cache_ignore_price_changes = true
+
+[item.rear_blade]
+search_phrases = ["grader blade"]
+# Target 5-6 foot rear blades (grader blades), Cat I hitch, quality brands
+keywords = "(('rear blade' OR 'grader blade' OR 'land plane' OR 'rear grader') AND ('Land Pride' OR Woods OR 'Bush Hog' OR 'King Kutter' OR Titan OR Rhino OR Speeco)) OR (('rear blade' OR 'grader blade' OR 'land plane') AND ('5 foot' OR '6 foot' OR 5ft OR 6ft OR '60 inch' OR '72 inch') AND (angle OR offset OR 'category 1' OR 'cat 1'))"
+antikeywords = "miniature toy model 'quick hitch' 'category 2' 'cat 2' 'cat II'"
+min_price = 200
+max_price = 1500
+cache_ignore_price_changes = true
+
+[item.lift_stacker]
+search_phrases = ["pallet stacker", "lift stacker"]
+# Target manual lift stackers (walk-behind pallet stackers) 5-12 ft lift, 1000-2000 lb capacity
+keywords = "(('pallet stacker' OR 'lift stacker' OR 'manual stacker') AND (Vestil OR 'Big Joe' OR Pake OR Wesco OR Presto OR 'Blue Giant')) OR (('pallet stacker' OR 'lift stacker' OR 'hand stacker') AND (electric OR winch OR hydraulic OR manual) AND (1000lb OR 1500lb OR 2000lb OR '1000 lb' OR '1500 lb'))"
+antikeywords = "miniature toy model jack hoist crane"
+min_price = 200
+max_price = 1500
+cache_ignore_price_changes = true
+
+[item.drawbar]
+enabled = true
+search_phrases = ["three point hitch drawbar", "3pt hitch drawbar", "3pt drawbar", "3 point drawbar"]
+# Target 3-point drawbars and hitch receivers for compact tractors
+keywords = "drawbar AND ('3 point' OR '3pt' OR 'three point' OR 'category 1' OR 'cat 1' OR receiver OR 'ball hitch' OR pintle OR clevis)"
+antikeywords = "miniature toy lawn garden ATV UTV golf 'category 2' 'cat 2'"
+min_price = 100
+max_price = 600
+cache_ignore_price_changes = true
+
+[item.ballast_box]
+search_phrases = ["ballast box"]
+# Target tractor ballast/weight boxes - brands or hitch indicators
+keywords = "('ballast box' OR 'weight box') AND ('3 point' OR '3pt' OR 'three point' OR tractor OR Kubota OR 'John Deere' OR JD OR 'Land Pride' OR Woods OR Titan OR 'Everything Attachments' OR 'category 1' OR 'cat 1')"
+antikeywords = "miniature toy imatch i-match 'quick hitch'"
+min_price = 150
+max_price = 700
+cache_ignore_price_changes = true
+
+[item.firewood]
+enabled = false
+marketplace = ["craigslist", "facebook"]  # Only search Craigslist and Facebook, not TractorHouse or other tractor marketplaces
+search_phrases = ["free firewood"]
+search_radius = 60  # Search 60 miles for firewood on both Craigslist and Facebook (overrides marketplace default of 250)
+search_nearby = false  # Disable searching nearby Craigslist areas to strictly enforce 60-mile radius
+cache_ignore_price_changes = true
+min_price = 0
+max_price = 1
+
+[item.chainsaw_project]
+enabled = false
+marketplace = ["craigslist", "facebook"]
+search_phrases = [
+    "chainsaw",
+    "chainsaw lot",
+    "project chainsaw",
+    "chainsaw for parts",
+    "chainsaw not running",
+    "chainsaw needs work",
+    "chainsaw needs carb",
+    "chainsaw no spark",
+    "chainsaw broken",
+    "chainsaw as is",
+    "old chainsaw",
+    "vintage chainsaw",
+    "barn find chainsaw",
+    "estate chainsaw"
+]
+
+keywords = """
+(Stihl AND (026 OR 028 OR 029 OR 034 OR 036 OR 038 OR 039 OR 044 OR 046 OR 048 OR 050 OR 051 OR 056 OR 064 OR 066 OR 070 OR 075 OR 076 OR 084 OR 088 OR 090 OR MS260 OR MS261 OR MS270 OR MS271 OR MS280 OR MS290 OR MS291 OR MS310 OR MS311 OR MS360 OR MS361 OR MS362 OR MS390 OR MS391 OR MS440 OR MS441 OR MS460 OR MS461 OR MS462 OR MS500i OR MS650 OR MS660 OR MS661 OR MS780 OR MS880 OR MS881))
+OR (Husqvarna AND (50 OR 51 OR 55 OR 61 OR 254 OR 257 OR 261 OR 262 OR 266 OR 268 OR 272 OR 281 OR 288 OR 350 OR 353 OR 357 OR 359 OR 362 OR 365 OR 372 OR 385 OR 390 OR 394 OR 395 OR 455 OR 460 OR 465 OR 555 OR 560 OR 562 OR 565 OR 570 OR 572 OR 575 OR 576 OR 592 OR 3120))
+OR (Dolmar AND (PS-34 OR PS-350 OR PS-351 OR PS-420 OR PS-421 OR PS-460 OR PS-500 OR PS-510 OR PS-5100 OR PS-5105 OR PS-540 OR PS-6000 OR PS-6100 OR PS-6400 OR PS-7300 OR PS-7310 OR PS-7900 OR PS-7910 OR PS-9000 OR PS-9010 OR PS-9210))
+OR (Makita AND (DCS34 OR DCS430 OR DCS431 OR DCS460 OR DCS500 OR DCS510 OR DCS520 OR DCS5121 OR DCS540 OR DCS6401 OR DCS6421 OR DCS7301 OR DCS7901 OR EA5000 OR EA5600 OR EA6100 OR EA7300 OR EA7900))
+OR (Jonsered AND (2045 OR 2050 OR 2054 OR 2055 OR 2063 OR 2065 OR 2071 OR 2077 OR 2083 OR 2094 OR 2095 OR 2145 OR 2149 OR 2150 OR 2152 OR 2153 OR 2156 OR 2159 OR 2163 OR 2165 OR 2166 OR 2171 OR 2172 OR 2186 OR 2188 OR CS2255))
+OR (Echo AND (CS-400 OR CS-440 OR CS-450 OR CS-490 OR CS-500 OR CS-501 OR CS-510 OR CS-520 OR CS-530 OR CS-550 OR CS-590 OR CS-600 OR CS-620 OR CS-670 OR CS-680 OR CS-730 OR CS-800 OR CS-8000 OR CS-1201))
+OR (Homelite AND (360 OR 410 OR 450 OR XL OR XL-12 OR XL-15 OR XL-76 OR XL-98 OR XL-113 OR XL-123 OR XL-130 OR Super2 OR 'Super XL' OR 'Super XL Auto' OR 'Super EZ' OR SXL OR SXLAO OR 1050 OR 1130 OR 650 OR 750 OR 410))
+OR (McCulloch AND (10-10 OR 1-10 OR 55 OR 250 OR 300 OR 310 OR 320 OR 330 OR 340 OR 440 OR 450 OR 550 OR 555 OR 605 OR 610 OR 650 OR 655 OR 690 OR 700 OR 795 OR 797 OR 800 OR 805 OR 850 OR PM55 OR PM60 OR PM355 OR PM374 OR PM375 OR PM380 OR PM470 OR PM480 OR PM510 OR PM555 OR PM570 OR PM605 OR PM610 OR PM650 OR PM700 OR PM800 OR PM805 OR PM850 OR PM880 OR 'Pro Mac' OR 'Timber Bear' OR 'Super Pro' OR SP80 OR SP81 OR SP125))
+OR (Shindaiwa AND (357 OR 377 OR 488 OR 490 OR 491 OR 577 OR 591 OR 600 OR 680 OR 695 OR 757 OR 800))
+OR (Solo AND (603 OR 613 OR 620 OR 634 OR 636 OR 637 OR 639 OR 644 OR 647 OR 651 OR 656 OR 662 OR 665 OR 667 OR 675 OR 680 OR 681 OR 690 OR 694))
+OR (Olympyk AND (938 OR 942 OR 945 OR 946 OR 947 OR 950 OR 951 OR 956 OR 962 OR 970 OR 980 OR 999))
+OR (Efco AND (137 OR 140 OR 141 OR 147 OR 151 OR 152 OR 156 OR 162 OR 165 OR 171 OR 181 OR MT3500 OR MT4000 OR MT4100 OR MT5200 OR MT6500 OR MT7200 OR MT8200))
+OR (Tanaka AND (ECS-330 OR ECS-355 OR ECS-3301 OR ECS-3351 OR ECS-4000 OR ECS-415 OR ECS-466 OR ECS-506 OR ECS-650 OR TCS-3301 OR TCS-3351 OR TCS-3401 OR TCS-4001 OR TCS-4501 OR TCS-5001 OR TCS-5100 OR TCS-5501 OR TCS-510))
+OR (Redmax AND (G310 OR G3200 OR G455 OR G5000 OR G5300 OR G561 OR G600 OR G621 OR GZ360 OR GZ380 OR GZ400 OR GZ4000 OR GZ450 OR GZ500 OR GZ550 OR GZ580 OR GZ600 OR GZ7000 OR GZ7100))
+OR ('20 inch' OR '24 inch' OR '25 inch' OR '28 inch' OR '32 inch' OR '36 inch' OR '42 inch')
+"""
+
+antikeywords = "electric battery cordless pole saw mini toy case only sharpener grinder file chain loops chains sprocket bar mount case cover scabbard carrying holster chaps helmet gloves pants boots protective gear firewood logs wood load cord logs tree service stump removal grinding rental rent"
+
+min_price = 0
+max_price = 500
+search_radius = 60
+search_nearby = false
+cache_ignore_price_changes = true

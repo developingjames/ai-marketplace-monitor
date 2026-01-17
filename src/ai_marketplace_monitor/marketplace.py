@@ -22,6 +22,11 @@ class MarketPlace(Enum):
     FACEBOOK = "facebook"
     CRAIGSLIST = "craigslist"
     TRACTORHOUSE = "tractorhouse"
+    AUCTION_OHIO = "auctionohio"
+    GOVDEALS = "govdeals"
+    PROXIBID = "proxibid"
+    PURPLE_WAVE = "purplewave"
+    RBAUCTION = "rbauction"
 
 
 @dataclass

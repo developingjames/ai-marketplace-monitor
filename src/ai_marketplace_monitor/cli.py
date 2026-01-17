@@ -15,7 +15,7 @@ from rich.logging import RichHandler
 from . import __version__
 from .utils import CacheType, amm_home, cache, counter, hilight
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_show_locals=False)
 
 
 def version_callback(value: bool) -> None:

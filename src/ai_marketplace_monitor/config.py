@@ -15,6 +15,12 @@ from .ai import DeepSeekBackend, OllamaBackend, OpenAIBackend, TAIConfig
 from .craigslist import CraigslistMarketplace
 from .facebook import FacebookMarketplace
 from .tractorhouse import TractorHouseMarketplace
+# New auction marketplaces
+from .auctionohio import AuctionOhioMarketplace
+from .govdeals import GovDealsMarketplace
+from .proxibid import ProxibidMarketplace
+from .purplewave import PurpleWaveMarketplace
+from .rbauction import RBAuctionMarketplace
 from .marketplace import ItemConfig, TItemConfig, TMarketplaceConfig
 from .notification import NotificationConfig
 from .region import RegionConfig
@@ -25,6 +31,12 @@ supported_marketplaces = {
     "facebook": FacebookMarketplace,
     "craigslist": CraigslistMarketplace,
     "tractorhouse": TractorHouseMarketplace,
+    # New auction marketplaces
+    "auctionohio": AuctionOhioMarketplace,
+    "govdeals": GovDealsMarketplace,
+    "proxibid": ProxibidMarketplace,
+    "purplewave": PurpleWaveMarketplace,
+    "rbauction": RBAuctionMarketplace,
 }
 supported_ai_backends = {
     "deepseek": DeepSeekBackend,

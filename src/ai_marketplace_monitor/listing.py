@@ -20,6 +20,12 @@ class Listing:
     seller: str
     condition: str
     description: str
+    # Auction-specific fields (all optional for backward compatibility)
+    auction_end_time: Optional[str] = None
+    time_remaining: Optional[str] = None
+    bid_count: Optional[int] = None
+    lot_number: Optional[str] = None
+    auction_id: Optional[str] = None
 
     @property
     def content(self: "Listing") -> Tuple[str, str, str]:

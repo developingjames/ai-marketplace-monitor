@@ -15,7 +15,17 @@
 
 </div>
 
-An intelligent tool that monitors Facebook Marketplace and Craigslist listings using AI to help you find the best deals. Get instant notifications when items matching your criteria are posted, with AI-powered analysis of each listing.
+An intelligent tool that monitors multiple online marketplaces using AI to help you find the best deals. Get instant notifications when items matching your criteria are posted, with AI-powered analysis of each listing.
+
+**Supported Marketplaces:**
+- 🛍️ Facebook Marketplace
+- 📋 Craigslist
+- 🚜 TractorHouse
+- 🔨 Auction Ohio
+- 🏛️ GovDeals (Government Auctions)
+- 📦 Proxibid
+- 🌾 Purple Wave
+- 🏗️ RB Auction (Ritchie Bros)
 
 **📚 [Read the Full Documentation](https://ai-marketplace-monitor.readthedocs.io/)**
 
@@ -46,11 +56,13 @@ AI: Great deal; A well-priced, well-maintained camera meets all search criteria,
 
 🔍 **Smart Search**
 
-- Search multiple marketplaces (Facebook Marketplace, Craigslist)
-- Search multiple products using keywords
-- Filter by price and location
+- Search 8 different marketplaces simultaneously
+- Support for general marketplaces (Facebook, Craigslist) and specialized auction sites
+- Search multiple products using keywords with Boolean logic
+- Filter by price, location, and auction-specific criteria
 - Exclude irrelevant results and spammers
 - Support for marketplace-specific categories and filters
+- Track auction end times and bid counts
 
 🤖 **AI-Powered**
 
@@ -71,8 +83,10 @@ AI: Great deal; A well-priced, well-maintained camera meets all search criteria,
 
 - Multi-city search
 - Pre-defined regions (USA, Canada, etc.)
-- Customizable search radius
+- Customizable search radius (Facebook, Craigslist, GovDeals, Purple Wave)
+- Regional filtering (RB Auction)
 - Flexible seller location filtering
+- Zip code + radius search for auction marketplaces
 
 ## 🚀 Quick Start
 
@@ -170,6 +184,106 @@ notify_with = ['markdown']  # Or combine: ['markdown', 'email', 'telegram']
 ```
 
 Each listing is saved as a separate markdown file with title, price, description, seller info, images, and AI evaluation. Perfect for building a searchable database in tools like Obsidian or for offline browsing.
+
+### Auction Marketplace Examples
+
+**Search Government Auctions (GovDeals):**
+
+```toml
+[marketplace.govdeals_ohio]
+market_type = "govdeals"
+enabled = true
+zipcode = "43311"  # Ohio zip code
+miles = 250        # Search within 250 miles
+
+[item.govt_equipment]
+enabled = true
+marketplace = ["govdeals_ohio"]
+search_phrases = ["trailer", "truck", "equipment"]
+keywords = "trailer OR truck OR equipment"
+antikeywords = "parts salvage"
+min_price = 500
+max_price = 25000
+```
+
+**Search Online Auctions (Auction Ohio, Proxibid):**
+
+```toml
+[marketplace.auctionohio]
+market_type = "auctionohio"
+enabled = true
+
+[marketplace.proxibid]
+market_type = "proxibid"
+enabled = true
+
+[item.farm_equipment]
+enabled = true
+marketplace = ["auctionohio", "proxibid"]
+search_phrases = ["tractor", "farm equipment"]
+keywords = "tractor AND (Kubota OR 'John Deere' OR Mahindra)"
+antikeywords = "toy model parts"
+min_price = 5000
+max_price = 50000
+```
+
+**Search Construction Equipment (Purple Wave):**
+
+```toml
+[marketplace.purplewave_midwest]
+market_type = "purplewave"
+enabled = true
+zipcode = "66062"  # Kansas zip code
+miles = 300        # Search within 300 miles
+
+[item.excavator]
+enabled = true
+marketplace = ["purplewave_midwest"]
+search_phrases = ["excavator", "backhoe", "skid steer"]
+keywords = "excavator OR backhoe OR 'skid steer'"
+antikeywords = "attachment bucket"
+min_price = 10000
+max_price = 100000
+```
+
+**Search Heavy Equipment (RB Auction):**
+
+```toml
+[marketplace.rbauction_usa]
+market_type = "rbauction"
+enabled = true
+region = "USA"  # Regional filtering
+
+[item.heavy_equipment]
+enabled = true
+marketplace = ["rbauction_usa"]
+search_phrases = ["dozer", "crane", "forklift"]
+keywords = "dozer OR crane OR forklift"
+min_price = 20000
+max_price = 200000
+```
+
+**Search Multiple Marketplaces at Once:**
+
+```toml
+[item.general_tractor]
+enabled = true
+# Search across all auction marketplaces simultaneously
+marketplace = ["auctionohio", "govdeals_ohio", "proxibid", "purplewave_midwest", "rbauction_usa"]
+search_phrases = ["tractor"]
+keywords = "tractor"
+antikeywords = "garden lawn toy"
+min_price = 1000
+max_price = 30000
+cache_ignore_price_changes = true
+```
+
+**Marketplace-Specific Features:**
+
+- **GovDeals & Purple Wave**: Support `zipcode` and `miles` parameters for radius-based search
+- **RB Auction**: Supports `region` parameter (e.g., "USA", "Canada", "Europe")
+- **Auction Ohio, Proxibid**: No location filtering required
+- **All auction marketplaces**: Track auction end times, time remaining, bid counts, and lot numbers
 
 ## 📚 Documentation
 
